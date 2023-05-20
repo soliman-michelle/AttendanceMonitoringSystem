@@ -9,7 +9,7 @@ import android.view.View;
 import com.example.practice.databinding.ActivityAdminHomeBinding;
 
 public class AdminHome extends AdminDrawable implements View.OnClickListener {
-    public CardView cv1, cv2, cv3, cv4;
+    public CardView cv1, cv2, cv3;
     ActivityAdminHomeBinding activityAdminHomeBinding;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,12 +21,10 @@ public class AdminHome extends AdminDrawable implements View.OnClickListener {
         cv1 = (CardView) findViewById(R.id.attendanceTracker);
         cv2 = (CardView) findViewById(R.id.attendanceScanner);
         cv3 = (CardView) findViewById(R.id.attendanceSchedule);
-        cv4 = (CardView) findViewById(R.id.profile);
 
         cv1.setOnClickListener(this);
         cv2.setOnClickListener(this);
         cv3.setOnClickListener(this);
-        cv4.setOnClickListener(this);
     }
 
     @Override
@@ -44,10 +42,6 @@ public class AdminHome extends AdminDrawable implements View.OnClickListener {
                 break;
             case R.id.attendanceSchedule:
                 i = new Intent(this, addSubject.class);
-                startActivity(i);
-                break;
-            case R.id.profile:
-                i = new Intent(this, addProgram.class);
                 startActivity(i);
                 break;
         }

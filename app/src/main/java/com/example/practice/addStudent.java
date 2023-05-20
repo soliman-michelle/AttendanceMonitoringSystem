@@ -40,8 +40,6 @@
         EditText fname, mname, lname, phone, email, studnum, df;
         private Spinner course, year, block;
         DatabaseReference reference;
-        ArrayList<String> courseLists;
-        private ArrayAdapter<String> courseAdapters;
         String regex = "(^((09|\\+639))(\\d{9})$)";
         String regexEmail = "^[a-zA-Z0-9._%+-]+@gmail\\.com$";
         Button save, btimport, show;
@@ -67,7 +65,6 @@
             save = findViewById(R.id.save);
             show = findViewById(R.id.show);
             df = findViewById(R.id.dfpass);
-            courseLists = new ArrayList<>();
             filePickerLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
                     new ActivityResultCallback<ActivityResult>() {
                         @Override
@@ -85,7 +82,6 @@
                         }
                     });
 
-
             btimport.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -96,8 +92,6 @@
                     filePickerLauncher.launch(intent);
                 }
             });
-
-
 
             show.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -124,24 +118,10 @@
             sectionAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             block.setAdapter(sectionAdapter);
 
-            reference = FirebaseDatabase.getInstance().getReference();
-            reference.child("programList").addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    for (DataSnapshot childSnapshot : snapshot.getChildren()) {
-                        String spinner = childSnapshot.child("program").getValue(String.class);
-                        courseLists.add(spinner);
-
-                        courseAdapters = new ArrayAdapter<String>(addStudent.this, android.R.layout.simple_spinner_dropdown_item, courseLists);
-                        courseAdapters.setDropDownViewResource(android.R.layout.simple_spinner_item);
-                        course.setAdapter(courseAdapters);
-                    }
-                }
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {
-
-                }
-            });
+            ArrayAdapter<CharSequence> programAdapter = ArrayAdapter.createFromResource(this,
+                    R.array.program_options, android.R.layout.simple_spinner_item);
+            programAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            course.setAdapter(programAdapter);
 
         }
             private String getPathFromUri(Uri uri) {

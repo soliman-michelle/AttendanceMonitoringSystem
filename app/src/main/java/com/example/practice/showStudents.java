@@ -35,7 +35,6 @@ public class showStudents extends AppCompatActivity {
         course = (Spinner) findViewById(R.id.courseSpinner);
         block = (Spinner) findViewById(R.id.block);
         show = findViewById(R.id.show);
-        courseLists = new ArrayList<>();
         ArrayAdapter<CharSequence> yearLevelAdapter = ArrayAdapter.createFromResource(this,
                 R.array.year_options, android.R.layout.simple_spinner_item);
         yearLevelAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -46,24 +45,10 @@ public class showStudents extends AppCompatActivity {
         sectionAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         block.setAdapter(sectionAdapter);
 
-        reference = FirebaseDatabase.getInstance().getReference();
-        reference.child("programList").addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                for (DataSnapshot childSnapshot : snapshot.getChildren()) {
-                    String spinner = childSnapshot.child("program").getValue(String.class);
-                    courseLists.add(spinner);
-
-                    courseAdapters = new ArrayAdapter<String>(showStudents.this, android.R.layout.simple_spinner_dropdown_item, courseLists);
-                    courseAdapters.setDropDownViewResource(android.R.layout.simple_spinner_item);
-                    course.setAdapter(courseAdapters);
-                }
-            }
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        });
+        ArrayAdapter<CharSequence> programAdapter = ArrayAdapter.createFromResource(this,
+                R.array.program_options, android.R.layout.simple_spinner_item);
+        programAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        course.setAdapter(programAdapter);
 
         show.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -71,6 +56,7 @@ public class showStudents extends AppCompatActivity {
                 String selectedCourse = course.getSelectedItem().toString();
                 String selectedYear = year.getSelectedItem().toString();
                 String selectedBlock = block.getSelectedItem().toString();
+                reference = FirebaseDatabase.getInstance().getReference();
 
                 DatabaseReference studentAccRef = reference.child("StudentAcc")
                         .child(selectedCourse)
@@ -95,6 +81,9 @@ public class showStudents extends AppCompatActivity {
                             }
 
                             Intent intent = new Intent(showStudents.this, showStudentList.class);
+                            intent.putExtra("selectedCourse", selectedCourse);
+                            intent.putExtra("selectedYear", selectedYear);
+                            intent.putExtra("selectedBlock", selectedBlock);
                             intent.putParcelableArrayListExtra("studentList", studentList);
                             startActivity(intent);
                         } else {

@@ -18,9 +18,6 @@
                 <item android:id="@+id/addProfessor"
                     android:icon="@drawable/track"
                     android:title="Add Professor"/>
-                <item android:id="@+id/addProgram"
-                    android:icon="@drawable/track"
-                    android:title="Add Programs"/>
 
                 <item android:id="@+id/addSubject"
                     android:icon="@drawable/track"

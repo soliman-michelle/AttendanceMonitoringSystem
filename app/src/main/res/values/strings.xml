@@ -12,8 +12,14 @@
         <item>Year 4</item>
     </string-array>
 
+    <string name="program_prompt">Select Programs</string>
+    <string-array name="program_options">
+        <item>BSCS</item>
+    </string-array>
     <string name="course_prompt">Select Course</string>
+
     <string name="select_professor">Select a professor</string>
+
     <string name="term_prompt">Select Term</string>
     <string-array name="term_options">
         <item>Prelim</item>
