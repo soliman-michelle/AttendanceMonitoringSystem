@@ -5,6 +5,15 @@
     import java.io.InputStream;
     import java.util.ArrayList;
 
+    import android.text.Editable;
+    import android.text.InputFilter;
+    import android.text.InputType;
+    import android.text.TextWatcher;
+    import android.text.method.NumberKeyListener;
+    import android.text.method.PasswordTransformationMethod;
+    import android.widget.CheckBox;
+    import android.widget.CompoundButton;
+
     import android.content.Intent;
     import android.database.Cursor;
     import android.net.Uri;
@@ -35,7 +44,6 @@
     import com.google.firebase.database.FirebaseDatabase;
     import com.google.firebase.database.ValueEventListener;
 
-
     public class addStudent extends AppCompatActivity {
         EditText fname, mname, lname, phone, email, studnum, df;
         private Spinner course, year, block;
@@ -61,6 +69,50 @@
             course = (Spinner) findViewById(R.id.courseSpinner);
             block = (Spinner) findViewById(R.id.block);
             btimport = findViewById(R.id.btimport);
+            CheckBox showPasswordCheckbox = findViewById(R.id.showPasswordCheckbox);
+
+            phone.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                    // Not needed for this implementation
+                }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    // Not needed for this implementation
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                    validatePhone();
+                }
+            });
+            studnum.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                    // Not needed for this implementation
+                }
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    // Not needed for this implementation
+                }
+                @Override
+                public void afterTextChanged(Editable s) {
+                    validateStudNum();
+                }
+            });
+            showPasswordCheckbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    if (isChecked) {
+                        // Show password
+                        df.setTransformationMethod(null);
+                    } else {
+                        // Hide password
+                        df.setTransformationMethod(new PasswordTransformationMethod());
+                    }
+                }
+            });
 
             save = findViewById(R.id.save);
             show = findViewById(R.id.show);
@@ -182,18 +234,42 @@
             if (val.isEmpty()) {
                 studnum.setError("Field Cannot be Empty!");
                 return false;
-            } else if (val.length() < 8) {
-                studnum.setError("Student number is too short!");
-                return false;
+            } else if (val.length() == 8) {
+                if (!val.matches("^201-[0-9]{4}$")) {
+                    studnum.setError("Student number must be in the format 201-####");
+                    return false;
+                }
+
+                InputFilter[] filters = studnum.getFilters();
+                InputFilter maxLengthFilter = new InputFilter.LengthFilter(8);
+                studnum.setFilters(new InputFilter[] { maxLengthFilter });
+                studnum.addTextChangedListener(new TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                        // No action needed
+                    }
+
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                        if (s.length() < 8) {
+                            studnum.setFilters(filters);
+                        }
+                    }
+
+                    @Override
+                    public void afterTextChanged(Editable s) {
+                        // No action needed
+                    }
+                });
+
+                return true;
             } else if (val.length() > 8) {
-                studnum.setError("Student number is too long!");
-                return false;
-            } else if (!(val.matches("^[0-9]{3}-[0-9]{4}$") || val.equals("000-0000"))) {
-                studnum.setError("Student number must be in number format of ###-####");
+                studnum.setText(val.substring(0, 8));
+                studnum.setSelection(8);
                 return false;
             } else {
-                studnum.setError(null);
-                return true;
+                studnum.setError("Student number must be in the format 201-####");
+                return false;
             }
         }
         private Boolean validateLastName() {
@@ -276,6 +352,7 @@
 
                                 databaseRef.child("profiledb")
                                         .child(users.getUid())
+                                        .child(user)
                                         .setValue(profile);
 
                                 Toast.makeText(addStudent.this, "Student added", Toast.LENGTH_SHORT).show();

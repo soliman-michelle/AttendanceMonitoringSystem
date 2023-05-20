@@ -20,6 +20,9 @@
         android:theme="@style/Theme.Practice"
         tools:targetApi="31">
         <activity
+            android:name=".UpdateStudentInfo"
+            android:exported="false" />
+        <activity
             android:name=".show_all_tracker"
             android:exported="false" />
         <activity
@@ -63,7 +66,7 @@
             android:exported="false" />
         <activity
             android:name=".AdminHome"
-            android:exported="true" >
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -135,7 +138,7 @@
             android:exported="false" />
         <activity
             android:name=".welcomeScreen"
-            android:exported="false"/>
+            android:exported="false" />
 
         <meta-data
             android:name="preloaded_fonts"
