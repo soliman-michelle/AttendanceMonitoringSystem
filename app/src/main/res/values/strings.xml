@@ -1,0 +1,41 @@
+<resources>
+    <string name="app_name">iCScan Attendance</string>
+    <string name="laguna"><b>LAGUNA UNIVERSITY</b></string>
+    <string name="open_nav">Open Navigation</string>
+    <string name="close_nav">Close Navigation</string>
+
+    <string name="year_prompt">Select Year Level</string>
+    <string-array name="year_options">
+        <item>Year 1</item>
+        <item>Year 2</item>
+        <item>Year 3</item>
+        <item>Year 4</item>
+    </string-array>
+
+    <string name="course_prompt">Select Course</string>
+    <string name="select_professor">Select a professor</string>
+    <string name="term_prompt">Select Term</string>
+    <string-array name="term_options">
+        <item>Prelim</item>
+        <item>Midterm</item>
+        <item>Finals</item>
+    </string-array>
+    <string name="days_prompt">Select a professor</string>
+    <string-array name="days_options">
+        <item>Sunday</item>
+        <item>Monday</item>
+        <item>Tuesday</item>
+        <item>Wednesday</item>
+        <item>Thursday</item>
+        <item>Friday</item>
+        <item>Saturday</item>
+    </string-array>
+    <string name="section_prompt">Select Section</string>
+    <string-array name="section_options">
+        <item>A</item>
+        <item>B</item>
+        <item>C</item>
+        <item>D</item>
+    </string-array>
+
+</resources>

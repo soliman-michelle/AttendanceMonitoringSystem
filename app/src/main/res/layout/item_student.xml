@@ -1,0 +1,77 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="200dp"
+    android:orientation="horizontal">
+
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="200dp">
+
+        <TextView
+            android:id="@+id/nameTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:layout_weight="0"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toTopOf="@+id/percentageTextView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/studNumTextView"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="50dp"
+            android:layout_weight="3"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toTopOf="@+id/arrivalTextView"
+            app:layout_constraintEnd_toStartOf="@+id/percentageTextView"
+            app:layout_constraintHorizontal_bias="0.49"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/nameTextView" />
+
+        <TextView
+            android:id="@+id/percentageTextView"
+            android:layout_width="150dp"
+            android:layout_height="100dp"
+            android:layout_marginStart="61dp"
+            android:layout_marginTop="35dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="28dp"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/studNumTextView"
+            app:layout_constraintTop_toBottomOf="@+id/nameTextView" />
+
+        <TextView
+            android:id="@+id/arrivalTextView"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="50dp"
+            android:layout_marginEnd="63dp"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toTopOf="@+id/attendanceTextView"
+            app:layout_constraintEnd_toStartOf="@+id/percentageTextView"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/studNumTextView" />
+
+        <TextView
+            android:id="@+id/attendanceTextView"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/arrivalTextView"
+            tools:layout_editor_absoluteX="33dp" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</LinearLayout>

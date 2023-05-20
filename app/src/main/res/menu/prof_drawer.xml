@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item android:id="@+id/home"
+            android:icon="@drawable/home"
+            android:title="Home"/>
+    </group>
+    <group android:checkableBehavior="single">
+
+        <item
+            android:title="Attendance">
+
+            <menu>
+                <item android:id="@+id/tracker"
+                    android:icon="@drawable/track"
+                    android:title="Attendance Tracker"/>
+
+                <item android:id="@+id/scanner"
+                    android:icon="@drawable/track"
+                    android:title="Attendance Generator"/>
+            </menu>
+        </item>
+    </group>
+
+    <group android:checkableBehavior="single">
+        <item android:id="@+id/addClass"
+            android:icon="@drawable/track"
+            android:title="Add Class"/>
+        <item android:id="@+id/schedule"
+            android:icon="@drawable/sched"
+            android:title="Class Schedule"/>
+    </group>
+
+    <group android:checkableBehavior="single">
+        <item
+            android:title="Profile">
+
+            <menu>
+                <item android:id="@+id/profile"
+                    android:icon="@drawable/person"
+                    android:title="Profile"/>
+                <item
+                    android:id="@+id/log_out"
+                    android:title="Sign Out"
+                    android:icon="@drawable/logout"/>
+
+            </menu>
+        </item>
+    </group>
+</menu>

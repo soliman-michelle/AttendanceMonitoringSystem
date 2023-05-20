@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permisssion.INTERNET" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Practice"
+        tools:targetApi="31">
+        <activity
+            android:name=".show_all_tracker"
+            android:exported="false" />
+        <activity
+            android:name=".showAllStudentAttendance"
+            android:exported="false" />
+        <activity
+            android:name=".profAttendanceTrack"
+            android:exported="false" />
+        <activity
+            android:name=".viewSubject"
+            android:exported="false" />
+        <activity
+            android:name=".showStudents"
+            android:exported="false" />
+        <activity
+            android:name=".masterList"
+            android:exported="false" />
+        <activity
+            android:name=".enrollStudent"
+            android:exported="false" />
+        <activity
+            android:name=".showProfList"
+            android:exported="false" />
+        <activity
+            android:name=".addSubject"
+            android:exported="false" />
+        <activity
+            android:name=".programList"
+            android:exported="false" />
+        <activity
+            android:name=".addProf"
+            android:exported="false" />
+        <activity
+            android:name=".addProfessors"
+            android:exported="false" />
+        <activity
+            android:name=".addStudent"
+            android:exported="false" />
+        <activity
+            android:name=".AdminDrawable"
+            android:exported="false" />
+        <activity
+            android:name=".AdminHome"
+            android:exported="false" />
+        <activity
+            android:name=".Admin_sign_up"
+            android:exported="false" />
+        <activity
+            android:name=".Admin_sign_in"
+            android:exported="true" />
+        <activity
+            android:name=".restrictForAdmin"
+            android:exported="false" />
+        <activity
+            android:name=".proftracker"
+            android:exported="false" />
+        <activity
+            android:name=".StoreInfo"
+            android:exported="false" />
+        <activity
+            android:name=".profprofile"
+            android:exported="false" />
+        <activity
+            android:name=".profsched"
+            android:exported="false" />
+        <activity
+            android:name=".qr_generator"
+            android:exported="false" />
+        <activity
+            android:name=".qrscanner"
+            android:exported="false" />
+        <activity
+            android:name=".schedule"
+            android:exported="false" />
+        <activity
+            android:name=".scanner"
+            android:exported="false" />
+        <activity
+            android:name=".tracker"
+            android:exported="false" />
+        <activity
+            android:name=".ProfHome"
+            android:exported="false" />
+        <activity
+            android:name=".Prof_sign_in"
+            android:exported="false" />
+        <activity
+            android:name=".Profile"
+            android:exported="false" />
+        <activity
+            android:name=".Drawable"
+            android:exported="false" />
+        <activity
+            android:name=".Home"
+            android:exported="false" />
+        <activity
+            android:name=".ForgotPassword"
+            android:exported="false" />
+        <activity
+            android:name=".Student_sign_in"
+            android:exported="false" />
+        <activity
+            android:name=".showStudentList"
+            android:exported="false" />
+        <activity
+            android:name=".splashScreen"
+            android:exported="false" />
+        <activity
+            android:name=".welcomeScreen"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <meta-data
+            android:name="preloaded_fonts"
+            android:resource="@array/preloaded_fonts" />
+    </application>
+
+</manifest>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item android:id="@+id/adminHome"
+            android:icon="@drawable/home"
+            android:title="Home"/>
+    </group>
+    <group android:checkableBehavior="single">
+
+        <item
+            android:title="Add Data">
+
+            <menu>
+                <item android:id="@+id/addStudent"
+                    android:icon="@drawable/track"
+                    android:title="Add Student"/>
+
+                <item android:id="@+id/addProfessor"
+                    android:icon="@drawable/track"
+                    android:title="Add Professor"/>
+                <item android:id="@+id/addProgram"
+                    android:icon="@drawable/track"
+                    android:title="Add Programs"/>
+
+                <item android:id="@+id/addSubject"
+                    android:icon="@drawable/track"
+                    android:title="Add Subjects"/>
+
+            </menu>
+        </item>
+    </group>
+
+    <group android:checkableBehavior="single">
+        <item
+            android:title="Profile">
+
+            <menu>
+                <item android:id="@+id/profile"
+                    android:icon="@drawable/person"
+                    android:title="Profile"/>
+                <item
+                    android:id="@+id/log_out"
+                    android:title="Sign Out"
+                    android:icon="@drawable/logout"/>
+
+            </menu>
+        </item>
+    </group>
+</menu>
