@@ -79,12 +79,18 @@
 
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    // Not needed for this implementation
+                    if (s.toString().startsWith("09") && s.length() > 11) {
+                        phone.setText(s.subSequence(0, 11)); // Truncate to 11 characters
+                        phone.setSelection(11); // Move the cursor to the end
+                    }else if (s.toString().startsWith("+639") && s.length() > 13) {
+                        phone.setText(s.subSequence(0, 13)); // Truncate to 13 characters
+                        phone.setSelection(13); // Move the cursor to the end
+                    }
+                    validatePhone(); // Call validatePhone() to perform the validation
                 }
 
                 @Override
                 public void afterTextChanged(Editable s) {
-                    validatePhone();
                 }
             });
             studnum.addTextChangedListener(new TextWatcher() {
@@ -99,6 +105,20 @@
                 @Override
                 public void afterTextChanged(Editable s) {
                     validateStudNum();
+                }
+            });
+            email.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                    // Not needed for this implementation
+                }
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    // Not needed for this implementation
+                }
+                @Override
+                public void afterTextChanged(Editable s) {
+                    validateEmail();
                 }
             });
             showPasswordCheckbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -207,14 +227,14 @@
             String val = phone.getText().toString();
 
             if (val.isEmpty()) {
-                phone.setError("Field cannot be Empty!");
+                phone.setError("Field cannot be empty!");
                 return false;
-            } else if (!val.matches(regex)){
-                phone.setError("Should start at 09 or +639 and must be 11 digits");
-                return false;
-            }else {
+            } else if (val.matches("^09\\d{9}$") || val.matches("^\\+639\\d{10}$"))  {
                 phone.setError(null);
                 return true;
+            } else {
+                phone.setError("Phone number should be 11 digits starting with '09'");
+                return false;
             }
         }
         private Boolean validateMiddleName() {
