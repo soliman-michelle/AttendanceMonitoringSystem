@@ -80,7 +80,6 @@ public class addSubject extends AppCompatActivity {
                 showTimePickerDialog(startTimeButton);
             }
         });
-
         endTimeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -88,6 +87,13 @@ public class addSubject extends AppCompatActivity {
             }
         });
 
+        showList.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i = new Intent(addSubject.this, showAllSubject.class);
+                startActivity(i);
+            }
+        });
 
         courseLists = new ArrayList<>();
         profList = new ArrayList<>();

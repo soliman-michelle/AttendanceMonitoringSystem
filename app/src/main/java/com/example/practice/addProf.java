@@ -86,7 +86,6 @@ public class addProf extends AppCompatActivity {
             public void afterTextChanged(Editable s) {
             }
         });
-
         email.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
