@@ -122,7 +122,7 @@
                     android:layout_weight="1"
                     android:ems="10"
                     android:hint="Unit"
-                    android:inputType="textPersonName" />
+                    android:inputType="number" />
             </LinearLayout>
 
             <Spinner
@@ -141,22 +141,20 @@
                 android:layout_marginStart="10dp"
                 android:layout_marginEnd="9dp">
 
-                <EditText
-                    android:id="@+id/editstartTime"
+                <Button
+                    android:id="@+id/startTimePicker"
                     android:layout_width="150dp"
                     android:layout_height="wrap_content"
-                    android:ems="10"
-                    android:hint="Start Time "
-                    android:inputType="time" />
+                    android:hint="Start Time"
+                    android:onClick="showStartTimePicker" />
 
-                <EditText
-                    android:id="@+id/editendTime"
+                <Button
+                    android:id="@+id/endTimePicker"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:ems="10"
-                    android:hint="End Time "
-                    android:inputType="time" />
+                    android:hint="End Time"
+                    android:onClick="showEndTimePicker" />
             </LinearLayout>
 
             <EditText

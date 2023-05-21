@@ -29,18 +29,9 @@
 
     <group android:checkableBehavior="single">
         <item
-            android:title="Profile">
-
-            <menu>
-                <item android:id="@+id/profile"
-                    android:icon="@drawable/person"
-                    android:title="Profile"/>
-                <item
-                    android:id="@+id/log_out"
-                    android:title="Sign Out"
-                    android:icon="@drawable/logout"/>
-
-            </menu>
-        </item>
+            android:id="@+id/log_out"
+            android:title="Sign Out"
+            android:icon="@drawable/logout"/>
     </group>
+
 </menu>

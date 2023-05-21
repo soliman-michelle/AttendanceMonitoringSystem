@@ -2,11 +2,10 @@ package com.example.practice;
 
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import java.io.InputStream;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 
+import android.app.AlertDialog;
+import android.app.TimePickerDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -17,6 +16,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.TimePicker;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResult;
@@ -26,39 +26,40 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.io.InputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
 
 public class addSubject extends AppCompatActivity {
 
     Spinner year, program, term, prof, days, section;
-    EditText roomNumber, coursename, coursenumber, unit, starttime, endTime;
+    EditText roomNumber, coursename, coursenumber, unit, startTime, endTime;
     Button save, showList, btimport;
-    private DatabaseReference programsRef, reference, ref , schedref, classref, student;
+    private DatabaseReference programsRef, reference, ref, schedref, classref, student;
     ArrayList<String> courseLists, profList, subjectList;
-    private ArrayAdapter<String> courseAdapters, profAdapter, subAdapter;
+    private ArrayAdapter<String> courseAdapter, profAdapter, subAdapter;
 
-    public static final int cellCount=2;
+    public static final int cellCount = 2;
     private ActivityResultLauncher<Intent> filePickerLauncher;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_subject);
 
-
-        starttime = findViewById(R.id.editstartTime);
-        endTime = findViewById(R.id.editendTime);
+        Button startTimeButton = findViewById(R.id.startTimePicker);
+        Button endTimeButton = findViewById(R.id.endTimePicker);
         days = findViewById(R.id.days);
         prof = findViewById(R.id.prof);
         term = findViewById(R.id.term);
@@ -72,6 +73,20 @@ public class addSubject extends AppCompatActivity {
         coursename = findViewById(R.id.subjectName);
         roomNumber = findViewById(R.id.room);
         btimport = findViewById(R.id.btimport);
+
+        startTimeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showTimePickerDialog(startTimeButton);
+            }
+        });
+
+        endTimeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showTimePickerDialog(endTimeButton);
+            }
+        });
 
 
         courseLists = new ArrayList<>();
@@ -109,112 +124,198 @@ public class addSubject extends AppCompatActivity {
         ArrayAdapter<CharSequence> yearLevelAdapter = ArrayAdapter.createFromResource(this,
                 R.array.year_options, android.R.layout.simple_spinner_item);
         yearLevelAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        year.setAdapter(yearLevelAdapter);
+        NothingSelectedSpinnerAdapter yearLevelSpinnerAdapter = new NothingSelectedSpinnerAdapter(
+                yearLevelAdapter,
+                R.layout.spinner_prompt_item,
+                this,
+                "Select Year Level");
+        year.setAdapter(yearLevelSpinnerAdapter);
 
-        ArrayAdapter<CharSequence> termAdapter = ArrayAdapter.createFromResource(this,
-                R.array.term_options, android.R.layout.simple_spinner_item);
-        termAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        term.setAdapter(termAdapter);
-
-        ArrayAdapter<CharSequence> dayAdapter = ArrayAdapter.createFromResource(this,
-                R.array.days_options, android.R.layout.simple_spinner_item);
-        dayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        days.setAdapter(dayAdapter);
+        ArrayAdapter<CharSequence> programAdapter = ArrayAdapter.createFromResource(this,
+                R.array.program_options, android.R.layout.simple_spinner_item);
+        programAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        NothingSelectedSpinnerAdapter programSpinnerAdapter = new NothingSelectedSpinnerAdapter(
+                programAdapter,
+                R.layout.spinner_prompt_item,
+                this,
+                "Select Program");
+        program.setAdapter(programSpinnerAdapter);
 
         ArrayAdapter<CharSequence> sectionAdapter = ArrayAdapter.createFromResource(this,
                 R.array.section_options, android.R.layout.simple_spinner_item);
         sectionAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        section.setAdapter(sectionAdapter);
+        NothingSelectedSpinnerAdapter nothingSelectedAdapter = new NothingSelectedSpinnerAdapter(
+                sectionAdapter,
+                R.layout.spinner_prompt_item,
+                this,
+                "Select Section");
+        section.setAdapter(nothingSelectedAdapter);
+
+        ArrayAdapter<CharSequence> termAdapter = ArrayAdapter.createFromResource(this,
+                R.array.term_options, android.R.layout.simple_spinner_item);
+        termAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        NothingSelectedSpinnerAdapter termSpinnerAdapter = new NothingSelectedSpinnerAdapter(
+                termAdapter,
+                R.layout.spinner_prompt_item,
+                this,
+                "Select Term");
+        term.setAdapter(termSpinnerAdapter);
+
+        ArrayAdapter<CharSequence> dayAdapter = ArrayAdapter.createFromResource(this,
+                R.array.days_options, android.R.layout.simple_spinner_item);
+        dayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        NothingSelectedSpinnerAdapter daySpinnerAdapter = new NothingSelectedSpinnerAdapter(
+                dayAdapter,
+                R.layout.spinner_prompt_item,
+                this,
+                "Select Day");
+        days.setAdapter(daySpinnerAdapter);
+
+
         ref = FirebaseDatabase.getInstance().getReference();
 
         ref.child("profList").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                profList.clear(); // Clear the list before populating it again
+                profList.add("Select Professor"); // Add the prompt message as the first item
+
                 for (DataSnapshot childSnapshot : snapshot.getChildren()) {
                     String spinner = childSnapshot.child("prof").getValue(String.class);
                     profList.add(spinner);
-
-                    profAdapter = new ArrayAdapter<String>(addSubject.this, android.R.layout.simple_spinner_dropdown_item, profList);
-                    profAdapter.setDropDownViewResource(android.R.layout.simple_spinner_item);
-                    prof.setAdapter(profAdapter);
                 }
+
+                profAdapter = new ArrayAdapter<String>(addSubject.this, android.R.layout.simple_spinner_dropdown_item, profList);
+                profAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                prof.setAdapter(profAdapter);
             }
+
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-
+                // Handle database error
             }
         });
 
 
-        reference = FirebaseDatabase.getInstance().getReference();
-        reference.child("programList").addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                for (DataSnapshot childSnapshot : snapshot.getChildren()) {
-                    String spinner = childSnapshot.child("program").getValue(String.class);
-                    courseLists.add(spinner);
-
-                    courseAdapters = new ArrayAdapter<String>(addSubject.this, android.R.layout.simple_spinner_dropdown_item, courseLists);
-                    courseAdapters.setDropDownViewResource(android.R.layout.simple_spinner_item);
-                    program.setAdapter(courseAdapters);
-                }
-            }
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        });
+        // Add a click listener to the save button
         save.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                programsRef = FirebaseDatabase.getInstance().getReference("subjectList");
-                student = FirebaseDatabase.getInstance().getReference("StudentAcc");
+                // Get the values from the input fields
 
-                schedref = FirebaseDatabase.getInstance().getReference("studentSched");
                 String courseName = coursename.getText().toString();
                 String units = unit.getText().toString();
-                String time = starttime.getText().toString() + " - " + endTime.getText().toString();
-                String courseCode= coursenumber.getText().toString();
-                String course = coursenumber.getText().toString() + " " + coursename.getText().toString();
+                String startTime = startTimeButton.getText().toString();
+                String endTime = endTimeButton.getText().toString();
+                String courseCode = coursenumber.getText().toString();
+                String course = courseCode + " " + courseName;
                 String room = roomNumber.getText().toString();
-                String yearLevel = year.getSelectedItem().toString();
-                String programNames = program.getSelectedItem().toString();
-                String professors = prof.getSelectedItem().toString();
-                String terms = term.getSelectedItem().toString();
-                String day = days.getSelectedItem().toString();
-                String sections = section.getSelectedItem().toString();
-                subjectsList subject = new subjectsList(courseName, programNames, yearLevel, terms, professors, day, room, courseCode, units,time, sections);
-                studentSched sched = new studentSched(courseName, time, day, room );
-                subList sub = new subList(course);
-                classref = FirebaseDatabase.getInstance().getReference("subList");
+                String programNames = (program.getSelectedItem() != null) ? program.getSelectedItem().toString() : "";
+                String yearLevel = (year.getSelectedItem() != null) ? year.getSelectedItem().toString() : "";
+                String terms = (term.getSelectedItem() != null) ? term.getSelectedItem().toString() : "";
+                String professors = (prof.getSelectedItem() != null) ? prof.getSelectedItem().toString() : "";
+                String day = (days.getSelectedItem() != null) ? days.getSelectedItem().toString() : "";
+                String sections = (section.getSelectedItem() != null) ? section.getSelectedItem().toString() : "";
 
-                classref.child(course).setValue(sub);
-                schedref.child(course)
-                        .child(day).setValue(sched);
-                // Write the new section to the database
-                programsRef.child(programNames)
-                        .child(yearLevel)
-                        .child(sections)
-                        .child(course)
-                        .child(day)
-                        .setValue(sched).addOnSuccessListener(new OnSuccessListener<Void>() {
-                            @Override
-                            public void onSuccess(Void aVoid) {
-                                // Show toast message for successful addition
-                                Toast.makeText(addSubject.this, "Subject added successfully", Toast.LENGTH_SHORT).show();
-                            }
-                        })
-                        .addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                // Show toast message for failure
-                                Toast.makeText(addSubject.this, "Failed to add subject", Toast.LENGTH_SHORT).show();
-                            }
-                        });
+                // Perform validation checks
+                if (courseCode.isEmpty() || courseName.isEmpty() || room.isEmpty() || units.isEmpty() || startTime.isEmpty() || endTime.isEmpty()) {
+                    // Display an error message if any of the fields are empty
+                    showErrorDialog("Please fill in all the fields");
+                } else if (programNames.equals("Select Program") || programNames.trim().isEmpty()) {
+                    // Display an error message if the program spinner is not selected or the selected program name is empty
+                    showErrorDialog("Please select a valid Program");
+                } else if (yearLevel.equals("Select Year Level") || yearLevel.trim().isEmpty()) {
+                    // Display an error message if the year level spinner is not selected or the selected year level is empty
+                    showErrorDialog("Please select a valid year level");
+                } else if (sections.equals("Select Section") || sections.trim().isEmpty()) {
+                    // Display an error message if the section spinner is not selected or the selected section is empty
+                    showErrorDialog("Please select a valid section");
+                } else if (professors.equals("Select Professor") || professors.trim().isEmpty()) {
+                    // Display an error message if the professor spinner is not selected or the selected professor is empty
+                    showErrorDialog("Please select a valid professor");
+                } else if (terms.equals("Select Term") || terms.trim().isEmpty()) {
+                    // Display an error message if the term spinner is not selected or the selected term is empty
+                    showErrorDialog("Please select a valid Term");
+                } else if (day.equals("Select Day") || day.trim().isEmpty()) {
+                    // Display an error message if the day spinner is not selected or the selected day is empty
+                    showErrorDialog("Please select a valid day");
+                } else if (startTime.equals("Select Start Time") || endTime.equals("Select End Time")) {
+                    // Display an error message if the start time or end time is not selected
+                    showErrorDialog("Please select a start time and end time");
+                } else if (courseCode.trim().isEmpty() || courseName.trim().isEmpty() || room.trim().isEmpty()) {
+                    // Display an error message if any of the EditText fields don't contain text
+                    showErrorDialog("Please enter valid text for course code, course name, and room number");
+                } else {
+                    // Create a confirmation dialog
+                    String confirmationMessage = "Course Code: " + courseCode +
+                            "\nCourse Name: " + courseName +
+                            "\nDay: " + day +
+                            "\nTime: " + startTime + " - " + endTime +
+                            "\nRoom Number: " + room +
+                            "\nYear Level: " + yearLevel +
+                            "\nSection: " + sections;
+
+                    AlertDialog.Builder builder = new AlertDialog.Builder(addSubject.this);
+                    builder.setTitle("Confirmation");
+                    builder.setMessage("Are you sure you want to add this subject?\n\n" + confirmationMessage);
+                    builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            // User confirmed, proceed with subject addition
+                            programsRef = FirebaseDatabase.getInstance().getReference("subjectList");
+                            student = FirebaseDatabase.getInstance().getReference("StudentAcc");
+
+                            schedref = FirebaseDatabase.getInstance().getReference("studentSched");
+                            subjectsList subject = new subjectsList(courseName, programNames, yearLevel, terms, professors, day, room, courseCode, units, startTime + " - " + endTime, sections);
+                            studentSched sched = new studentSched(courseName, startTime + " - " + endTime, day, room);
+                            subList sub = new subList(course);
+                            classref = FirebaseDatabase.getInstance().getReference("subList");
+
+                            classref.child(course).setValue(sub);
+                            schedref.child(course)
+                                    .child(day).setValue(sched);
+                            // Write the new section to the database
+                            programsRef.child(programNames)
+                                    .child(yearLevel)
+                                    .child(sections)
+                                    .child(course)
+                                    .child(day)
+                                    .setValue(sched)
+                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                        @Override
+                                        public void onSuccess(Void aVoid) {
+                                            // Show toast message for successful addition
+                                            Toast.makeText(addSubject.this, "Subject added successfully", Toast.LENGTH_SHORT).show();
+                                        }
+                                    })
+                                    .addOnFailureListener(new OnFailureListener() {
+                                        @Override
+                                        public void onFailure(@NonNull Exception e) {
+                                            // Show toast message for failure
+                                            Toast.makeText(addSubject.this, "Failed to add subject", Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
+                        }
+                    });
+                    builder.setNegativeButton("No", null);
+
+                    // Show the confirmation dialog
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
+                }
             }
         });
-            }
 
+
+    }
+    private void showErrorDialog(String errorMessage) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(addSubject.this);
+        builder.setTitle("Error");
+        builder.setMessage(errorMessage);
+        builder.setPositiveButton("OK", null);
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
     private String getPathFromUri(Uri uri) {
         String path = null;
         String[] projection = {MediaStore.Images.Media.DATA};
@@ -229,6 +330,37 @@ public class addSubject extends AppCompatActivity {
 
     private void showToast(String message) {
         Toast.makeText(addSubject.this, message, Toast.LENGTH_SHORT).show();
+    }
+    private void showTimePickerDialog(final Button button) {
+        // Get the current time
+        final Calendar calendar = Calendar.getInstance();
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        int minute = calendar.get(Calendar.MINUTE);
+
+        // Create a time picker dialog
+        TimePickerDialog timePickerDialog = new TimePickerDialog(
+                this,
+                new TimePickerDialog.OnTimeSetListener() {
+                    @Override
+                    public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+                        // Convert 24-hour format to 12-hour format
+                        int hour = hourOfDay % 12;
+                        String amPm = (hourOfDay < 12) ? "AM" : "PM";
+                        if (hour == 0) {
+                            hour = 12; // Handle midnight (0 hours)
+                        }
+                        // Set the selected time to the Button
+                        String time = String.format("%02d:%02d %s", hour, minute, amPm);
+                        button.setText(time);
+                    }
+                },
+                hour,
+                minute,
+                false // Set to false to use 12-hour format
+        );
+
+        // Show the dialog
+        timePickerDialog.show();
     }
 
     public void importExcelFile(Uri uri) {

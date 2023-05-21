@@ -20,6 +20,9 @@
         android:theme="@style/Theme.Practice"
         tools:targetApi="31">
         <activity
+            android:name=".showAllSubject"
+            android:exported="false" />
+        <activity
             android:name=".UpdateStudentInfo"
             android:exported="false" />
         <activity

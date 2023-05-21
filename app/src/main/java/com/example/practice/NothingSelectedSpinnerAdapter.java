@@ -41,14 +41,17 @@ public class NothingSelectedSpinnerAdapter extends ArrayAdapter<CharSequence> {
         TextView textView = view.findViewById(android.R.id.text1);
         CharSequence item = getItem(position);
         if (item == null) {
-            // Display the prompt with a different style
+            // Display the prompt with the same style as selected items
             textView.setText(promptText);
-            textView.setTextColor(getContext().getResources().getColor(R.color.black));
+            textView.setTextColor(getContext().getResources().getColor(android.R.color.black));
+            textView.setTextSize(18); // Set the desired text size for the prompt
         } else {
             textView.setText(item);
             textView.setTextColor(getContext().getResources().getColor(android.R.color.black));
+            textView.setTextSize(18); // Set the desired text size for the selected item
         }
 
         return view;
     }
+
 }
