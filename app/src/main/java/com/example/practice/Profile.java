@@ -47,25 +47,35 @@ public class Profile extends AppCompatActivity {
             String studentNumber = extractStudentNumber(email);
 
             if (studentNumber != null) {
-                databaseReference = FirebaseDatabase.getInstance().getReference("profiledb/" + studentNumber);
+                DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("StudentAcc");
                 databaseReference.addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         if (dataSnapshot.exists()) {
-                            // Retrieve the profile data for the matching student number
-                            String firstname = dataSnapshot.child("fname").getValue(String.class);
-                            String middlename = dataSnapshot.child("mname").getValue(String.class);
-                            String lastname = dataSnapshot.child("lname").getValue(String.class);
-                            String user = dataSnapshot.child("studnum").getValue(String.class);
-                            String phonenum = dataSnapshot.child("phone").getValue(String.class);
-                            String pass = dataSnapshot.child("defaultpass").getValue(String.class);
-                            String useremail = dataSnapshot.child("email").getValue(String.class);
-                            nameLabel.setText(firstname + " " + middlename + " " + lastname);
-                            editname.setText(firstname + " " + middlename + " " + lastname);
-                            editusername.setText(user);
-                            editPhone.setText(phonenum);
-                            editEmail.setText(useremail);
-                            editPassword.setText(pass);
+                            DataSnapshot bscsSnapshot = dataSnapshot.child("BSCS");
+                            if (bscsSnapshot.exists()) {
+                                for (DataSnapshot yearSnapshot : bscsSnapshot.getChildren()) {
+                                    for (DataSnapshot sectionSnapshot : yearSnapshot.getChildren()) {
+                                        DataSnapshot studentSnapshot = sectionSnapshot.child(studentNumber);
+                                        if (studentSnapshot.exists()) {
+                                            String firstname = studentSnapshot.child("fname").getValue(String.class);
+                                            String middlename = studentSnapshot.child("mname").getValue(String.class);
+                                            String lastname = studentSnapshot.child("lname").getValue(String.class);
+                                            String user = studentSnapshot.child("studnum").getValue(String.class);
+                                            String phonenum = studentSnapshot.child("phone").getValue(String.class);
+                                            String pass = studentSnapshot.child("defaultpass").getValue(String.class);
+                                            String useremail = studentSnapshot.child("email").getValue(String.class);
+                                            nameLabel.setText(firstname + " " + middlename + " " + lastname);
+                                            editname.setText(firstname + " " + middlename + " " + lastname);
+                                            editusername.setText(user);
+                                            editPhone.setText(phonenum);
+                                            editEmail.setText(useremail);
+                                            editPassword.setText(pass);
+                                            return; // Exit the listener if the student number is found
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -77,12 +87,7 @@ public class Profile extends AppCompatActivity {
             }
         }
     }
-
-    private String extractStudentNumber(String email) {
-        // Implement your logic to extract the student number from the email
-        // For example, if the email format is "studentNumber@gmail.com",
-        // you can extract the student number by removing the "@gmail.com" part.
-        // Modify this method according to your specific email format.
+        private String extractStudentNumber(String email) {
         if (email != null && email.contains("@")) {
             String[] parts = email.split("@");
             if (parts.length > 0) {

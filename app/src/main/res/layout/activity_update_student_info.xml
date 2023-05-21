@@ -33,6 +33,33 @@
             android:textStyle="bold"
             android:gravity="center"
             android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:id="@+id/courseTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Course"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_marginBottom="16dp" />
+        <EditText
+            android:id="@+id/fname"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="First Name"
+            android:layout_marginBottom="8dp" />
+        <EditText
+            android:id="@+id/mname"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Middle Name"
+            android:layout_marginBottom="8dp" />
+        <EditText
+            android:id="@+id/lname"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Last Name"
+            android:layout_marginBottom="8dp" />
         <Spinner
             android:id="@+id/year"
             android:layout_width="match_parent"

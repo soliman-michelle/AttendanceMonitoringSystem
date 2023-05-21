@@ -6,7 +6,8 @@ import android.os.Parcelable;
 public class studentList implements Parcelable {
     private String fullname;
     private String studNum;
-    private String yearLevel;
+    private String year;
+    private String course;
     private String section;
     private String email;
     private String defaultpass;
@@ -36,26 +37,35 @@ public class studentList implements Parcelable {
         this.phone = phone;
     }
 
-    public studentList(String fullname, String studNum,  String yearLevel, String section, String email, String defaultpass, String phone) {
+    public String getCourse() {
+        return course;
+    }
+
+    public void setCourse(String course) {
+        this.course = course;
+    }
+
+    public studentList(String fullname, String studNum, String course, String year, String section, String email, String defaultpass, String phone) {
         this.fullname = fullname;
         this.studNum = studNum;
-        this.yearLevel = yearLevel;
+        this.course = course;
+        this.year = year;
         this.section = section;
         this.defaultpass = defaultpass;
         this.email = email;
         this.phone = phone;
-
-
     }
 
     protected studentList(Parcel in) {
         fullname = in.readString();
         studNum = in.readString();
-        yearLevel = in.readString();
+        course = in.readString();
+        year = in.readString();
         section = in.readString();
         email = in.readString();
-        phone = in.readString();
         defaultpass = in.readString();
+        phone = in.readString();
+
     }
 
     public static final Creator<studentList> CREATOR = new Creator<studentList>() {
@@ -83,10 +93,10 @@ public class studentList implements Parcelable {
         this.studNum = studNum;
     }
     public String getYearLevel() {
-        return yearLevel;
+        return year;
     }
     public void setYearLevel(String yearLevel) {
-        this.yearLevel = yearLevel;
+        this.year = yearLevel;
     }
     public String getSection() {
         return section;
@@ -103,7 +113,8 @@ public class studentList implements Parcelable {
     public void writeToParcel(Parcel parcel, int i) {
         parcel.writeString(fullname);
         parcel.writeString(studNum);
-        parcel.writeString(yearLevel);
+        parcel.writeString(course);
+        parcel.writeString(year);
         parcel.writeString(section);
         parcel.writeString(email);
         parcel.writeString(phone);

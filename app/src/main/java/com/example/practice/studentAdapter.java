@@ -63,13 +63,13 @@ public class studentAdapter extends BaseAdapter {
         TextView studentNumberTextView = convertView.findViewById(R.id.studentNumberTextView);
         TextView yearLevelTextView = convertView.findViewById(R.id.yearLevelTextView);
         ImageView menuImageView = convertView.findViewById(R.id.menuImageView);
-
+        TextView sectionTextView = convertView.findViewById(R.id.sectionTextView);
         studentList student = filteredItemList.get(position);
 
         fullNameTextView.setText(student.getFullname());
         studentNumberTextView.setText(student.getStudNum());
         yearLevelTextView.setText(student.getYearLevel());
-
+        sectionTextView.setText(student.getSection());
         menuImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

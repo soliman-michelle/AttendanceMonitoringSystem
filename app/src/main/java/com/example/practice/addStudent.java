@@ -211,8 +211,6 @@
                     this,
                     "Select Section");
             block.setAdapter(nothingSelectedAdapter);
-
-
         }
             private String getPathFromUri(Uri uri) {
                 String path = null;
@@ -380,7 +378,6 @@
                                 FirebaseUser users = mAuth.getCurrentUser();
 
                                 StudentAcc student = new StudentAcc(firstname, middlename, lastname, user, phonenum, pass, useremail, courseStr, yearLevelStr, sectionStr);
-                                profiledb profile = new profiledb(firstname, middlename, lastname, user, phonenum, pass, useremail, courseStr, yearLevelStr, sectionStr);
                                 databaseRef.child("StudentAcc")
                                         .child(courseStr)
                                         .child(yearLevelStr)
@@ -388,9 +385,6 @@
                                         .child(user)
                                         .setValue(student);
 
-                                databaseRef.child("profiledb")
-                                        .child(user)
-                                        .setValue(profile);
 
                                 Toast.makeText(addStudent.this, "Student added", Toast.LENGTH_SHORT).show();
                                 fname.setText("");
@@ -449,11 +443,6 @@
                                                         .child(studnum)
                                                         .setValue(student);
 
-                                                // Save the user to the profiledb node with UID as key
-                                                profiledb profile = new profiledb(fname, mname, lname, studnum, phone, defaultpass, email, course, year, section);
-                                                databaseRef.child("profiledb")
-                                                        .child(studnum)
-                                                        .setValue(profile);
 
                                                 Toast.makeText(addStudent.this, "Student added successfully", Toast.LENGTH_SHORT).show();
                                             } else {

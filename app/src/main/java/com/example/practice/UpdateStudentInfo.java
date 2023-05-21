@@ -23,18 +23,13 @@ import com.google.firebase.database.ValueEventListener;
 
 public class UpdateStudentInfo extends AppCompatActivity {
 
-    private EditText passwordEditText;
-    private EditText phoneNumberEditText;
-    private EditText emailEditText;
-    private Spinner yearSpinner;
-    private Spinner sectionSpinner;
+    private EditText passwordEditText, phoneNumberEditText, emailEditText, fname, mname, lname;
+    private Spinner yearSpinner, sectionSpinner;
     private Button updateButton;
     private DatabaseReference databaseReference;
     private FirebaseUser currentUser;
     private studentList selectedStudent; // Added field to store the selected student
-    private TextView fullNameTextView;
-    private TextView studentNumberTextView;
-
+    private TextView fullNameTextView, studentNumberTextView, courseTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +45,10 @@ public class UpdateStudentInfo extends AppCompatActivity {
         updateButton = findViewById(R.id.updateButton);
         fullNameTextView = findViewById(R.id.fullNameTextView);
         studentNumberTextView = findViewById(R.id.studentNumberTextView);
+        courseTextView = findViewById(R.id.courseTextView);
+        fname = findViewById(R.id.fname);
+        mname = findViewById(R.id.mname);
+        lname = findViewById(R.id.lname);
 
         // Initialize Firebase
         databaseReference = FirebaseDatabase.getInstance().getReference();
@@ -61,23 +60,45 @@ public class UpdateStudentInfo extends AppCompatActivity {
         if (intent != null) {
             String fullname = intent.getStringExtra("fullname");
             String studNum = intent.getStringExtra("studNum");
-            String defaultpass = intent.getStringExtra("defaultpass");
-            String email = intent.getStringExtra("email");
-            String phone = intent.getStringExtra("phone");
-            String section = intent.getStringExtra("section");
+            String course = intent.getStringExtra("course");
             String yearLevel = intent.getStringExtra("yearLevel");
+            String section = intent.getStringExtra("section");
+            String email = intent.getStringExtra("email");
+            String defaultpass = intent.getStringExtra("defaultpass");
+            String phone = intent.getStringExtra("phone");
+
+            String[] nameParts = fullname.split("\\s+"); // Assuming the full name has spaces as separators
+            String firstName = "";
+            String middleName = "";
+            String lastName = "";
+
+            if (nameParts.length >= 1) {
+                firstName = nameParts[0];
+            }
+            if (nameParts.length >= 2) {
+                lastName = nameParts[nameParts.length - 1];
+            }
+            if (nameParts.length >= 3) {
+                middleName = nameParts[1];
+            }
 
             // Populate the fields with the student data
             fullNameTextView.setText(fullname);
             studentNumberTextView.setText(studNum);
+            courseTextView.setText(course);
             passwordEditText.setText(defaultpass);
             emailEditText.setText(email);
             phoneNumberEditText.setText(phone);
+            fname.setText(firstName);
+            mname.setText(middleName);
+            lname.setText(lastName);
 
             ArrayAdapter<CharSequence> yearAdapter = ArrayAdapter.createFromResource(this, R.array.year_options, android.R.layout.simple_spinner_item);
             yearAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             yearSpinner.setAdapter(yearAdapter);
             setSpinnerSelection(yearSpinner, yearLevel);
+            yearSpinner.setClickable(false);
+
             ArrayAdapter<CharSequence> sectionAdapter = ArrayAdapter.createFromResource(this, R.array.section_options, android.R.layout.simple_spinner_item);
             sectionAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             sectionSpinner.setAdapter(sectionAdapter);
@@ -86,12 +107,14 @@ public class UpdateStudentInfo extends AppCompatActivity {
             selectedStudent = new studentList(
                     fullname,
                     studNum,
+                    course,
                     yearLevel,
                     section,
                     email,
-                    phone,
-                    defaultpass
-            );
+                    defaultpass,
+                    phone
+
+                    );
 
 
         }
@@ -121,51 +144,82 @@ public class UpdateStudentInfo extends AppCompatActivity {
         String newEmail = emailEditText.getText().toString();
         String newYearLevel = yearSpinner.getSelectedItem().toString();
         String newSection = sectionSpinner.getSelectedItem().toString();
+        String fullName = fullNameTextView.getText().toString();
+        String studNum = studentNumberTextView.getText().toString();
 
-        String encodedEmail = encodeEmail(newEmail);
+        // Split the full name into first name, middle name, and last name
+        String[] nameParts = fullName.split("\\s+"); // Assuming the full name has spaces as separators
+        String firstName = "";
+        String middleName = "";
+        String lastName = "";
 
-        // Update the student's information in the Firebase Realtime Database (StudentAcc)
-        DatabaseReference studentAccRef = databaseReference.child("StudentAcc").child("BSCS")
-                .child(selectedStudent.getYearLevel()).child(selectedStudent.getSection())
-                .child(selectedStudent.getStudNum());
+        if (nameParts.length >= 1) {
+            firstName = nameParts[0];
+        }
+        if (nameParts.length >= 2) {
+            lastName = nameParts[nameParts.length - 1];
+        }
+        if (nameParts.length >= 3) {
+            middleName = nameParts[1];
+        }
 
-        studentAccRef.child("yearLevel").setValue(newYearLevel);
-        studentAccRef.child("section").setValue(newSection);
-        studentAccRef.child("email").setValue(newEmail);
-        studentAccRef.child("phone").setValue(newPhoneNumber);
-        studentAccRef.child("defaultpass").setValue(newPassword);
+        // Check if the section has changed
+        if (!newSection.equals(selectedStudent.getSection())) {
+            // Section has changed, update the section in the Firebase Realtime Database (StudentAcc)
+            DatabaseReference studentAccRef = databaseReference.child("StudentAcc")
+                    .child("BSCS")
+                    .child(selectedStudent.getYearLevel())
+                    .child(selectedStudent.getSection())
+                    .child(selectedStudent.getStudNum());
 
-        // Update the student's information in the Firebase Realtime Database (profiledb)
-        DatabaseReference usersRef = databaseReference.child("profiledb");
-        usersRef.orderByChild("studnum").equalTo(selectedStudent.getStudNum()).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
-                    String userId = userSnapshot.getKey();
+            studentAccRef.removeValue(); // Remove the existing student data under the old section
 
-                    // Update the user's information in the Firebase Realtime Database (profiledb)
-                    DatabaseReference userProfileRef = databaseReference.child("profiledb")
-                            .child(userId);
+            // Create a new DatabaseReference for the updated section
+            DatabaseReference newStudentAccRef = databaseReference.child("StudentAcc")
+                    .child("BSCS")
+                    .child(newYearLevel) // Use newYearLevel instead of selectedStudent.getYearLevel()
+                    .child(newSection) // Use newSection instead of selectedStudent.getSection()
+                    .child(selectedStudent.getStudNum());
 
-                    userProfileRef.child("defaultpass").setValue(newPassword);
-                    userProfileRef.child("email").setValue(newEmail);
-                    userProfileRef.child("phone").setValue(newPhoneNumber);
-                    userProfileRef.child("year").setValue(newYearLevel);
-                }
+            // Set the updated values for the student under the new section
+            newStudentAccRef.child("fname").setValue(firstName);
+            newStudentAccRef.child("mname").setValue(middleName);
+            newStudentAccRef.child("lname").setValue(lastName);
+            newStudentAccRef.child("studnum").setValue(studNum);
+            newStudentAccRef.child("year").setValue(newYearLevel);
+            newStudentAccRef.child("section").setValue(newSection);
+            newStudentAccRef.child("email").setValue(newEmail);
+            newStudentAccRef.child("phone").setValue(newPhoneNumber);
+            newStudentAccRef.child("defaultpass").setValue(newPassword);
 
-                // Display a toast message to indicate that the update was successful
-                Toast.makeText(UpdateStudentInfo.this, "Student information updated", Toast.LENGTH_SHORT).show();
+            // Display a toast message to indicate that the update was successful
+            Toast.makeText(UpdateStudentInfo.this, "Student information updated", Toast.LENGTH_SHORT).show();
 
-                // Finish the activity to go back to the previous screen
-                finish();
-            }
+            // Finish the activity to go back to the previous screen
+            finish();
+        } else {
+            // Section has not changed, update only the other fields in the Firebase Realtime Database (StudentAcc)
+            DatabaseReference studentAccRef = databaseReference.child("StudentAcc")
+                    .child("BSCS")
+                    .child(selectedStudent.getYearLevel())
+                    .child(selectedStudent.getSection())
+                    .child(selectedStudent.getStudNum());
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                // Handle any errors
-                Toast.makeText(UpdateStudentInfo.this, "Failed to update student information", Toast.LENGTH_SHORT).show();
-            }
-        });
+            studentAccRef.child("fname").setValue(firstName);
+            studentAccRef.child("mname").setValue(middleName);
+            studentAccRef.child("lname").setValue(lastName);
+            studentAccRef.child("studnum").setValue(studNum);
+            studentAccRef.child("yearLevel").setValue(newYearLevel);
+            studentAccRef.child("email").setValue(newEmail);
+            studentAccRef.child("phone").setValue(newPhoneNumber);
+            studentAccRef.child("defaultpass").setValue(newPassword);
+
+            // Display a toast message to indicate that the update was successful
+            Toast.makeText(UpdateStudentInfo.this, "Student information updated", Toast.LENGTH_SHORT).show();
+
+            // Finish the activity to go back to the previous screen
+            finish();
+        }
     }
 
     private String encodeEmail(String email) {

@@ -33,6 +33,7 @@ public class Student implements Parcelable {
         }
     };
 
+
     public String getName() {
         return name;
     }
