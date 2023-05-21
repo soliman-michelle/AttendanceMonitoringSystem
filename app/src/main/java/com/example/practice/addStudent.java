@@ -5,6 +5,8 @@
     import java.io.InputStream;
     import java.util.ArrayList;
 
+    import android.app.AlertDialog;
+    import android.content.DialogInterface;
     import android.text.Editable;
     import android.text.InputFilter;
     import android.text.InputType;
@@ -183,17 +185,33 @@
             ArrayAdapter<CharSequence> yearLevelAdapter = ArrayAdapter.createFromResource(this,
                     R.array.year_options, android.R.layout.simple_spinner_item);
             yearLevelAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            year.setAdapter(yearLevelAdapter);
-
-            ArrayAdapter<CharSequence> sectionAdapter = ArrayAdapter.createFromResource(this,
-                    R.array.section_options, android.R.layout.simple_spinner_item);
-            sectionAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            block.setAdapter(sectionAdapter);
+            NothingSelectedSpinnerAdapter yearLevelSpinnerAdapter = new NothingSelectedSpinnerAdapter(
+                    yearLevelAdapter,
+                    R.layout.spinner_prompt_item,
+                    this,
+                    "Select Year Level");
+            year.setAdapter(yearLevelSpinnerAdapter);
 
             ArrayAdapter<CharSequence> programAdapter = ArrayAdapter.createFromResource(this,
                     R.array.program_options, android.R.layout.simple_spinner_item);
             programAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            course.setAdapter(programAdapter);
+            NothingSelectedSpinnerAdapter programSpinnerAdapter = new NothingSelectedSpinnerAdapter(
+                    programAdapter,
+                    R.layout.spinner_prompt_item,
+                    this,
+                    "Select Program");
+            course.setAdapter(programSpinnerAdapter);
+
+            ArrayAdapter<CharSequence> sectionAdapter = ArrayAdapter.createFromResource(this,
+                    R.array.section_options, android.R.layout.simple_spinner_item);
+            sectionAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            NothingSelectedSpinnerAdapter nothingSelectedAdapter = new NothingSelectedSpinnerAdapter(
+                    sectionAdapter,
+                    R.layout.spinner_prompt_item,
+                    this,
+                    "Select Section");
+            block.setAdapter(nothingSelectedAdapter);
+
 
         }
             private String getPathFromUri(Uri uri) {
@@ -371,7 +389,6 @@
                                         .setValue(student);
 
                                 databaseRef.child("profiledb")
-                                        .child(users.getUid())
                                         .child(user)
                                         .setValue(profile);
 
@@ -391,77 +408,93 @@
         }
 
         public void importExcelFile(Uri uri) {
-            try {
-                DatabaseReference databaseRef = FirebaseDatabase.getInstance().getReference();
-                FirebaseAuth mAuth = FirebaseAuth.getInstance();
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Confirmation");
+            builder.setMessage("Are you sure you want to import the file?");
+            builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    try {
+                        DatabaseReference databaseRef = FirebaseDatabase.getInstance().getReference();
+                        FirebaseAuth mAuth = FirebaseAuth.getInstance();
 
-                InputStream inputStream = getContentResolver().openInputStream(uri);
-                Workbook workbook = new XSSFWorkbook(inputStream);
-                Sheet sheet = workbook.getSheetAt(0);
+                        InputStream inputStream = getContentResolver().openInputStream(uri);
+                        Workbook workbook = new XSSFWorkbook(inputStream);
+                        Sheet sheet = workbook.getSheetAt(0);
 
-                for (Row row : sheet) {
-                    String course = getStringCellValue(row.getCell(0));
-                    String year = getStringCellValue(row.getCell(1));
-                    String section = getStringCellValue(row.getCell(2));
-                    String studnum = getStringCellValue(row.getCell(3));
-                    String lname = getStringCellValue(row.getCell(4));
-                    String fname = getStringCellValue(row.getCell(5));
-                    String mname = getStringCellValue(row.getCell(6));
-                    String defaultpass = getStringCellValue(row.getCell(7));
-                    String email = getStringCellValue(row.getCell(8));
-                    String phone = getStringCellValue(row.getCell(9));
+                        for (Row row : sheet) {
+                            String course = getStringCellValue(row.getCell(0));
+                            String year = getStringCellValue(row.getCell(1));
+                            String section = getStringCellValue(row.getCell(2));
+                            String studnum = getStringCellValue(row.getCell(3));
+                            String lname = getStringCellValue(row.getCell(4));
+                            String fname = getStringCellValue(row.getCell(5));
+                            String mname = getStringCellValue(row.getCell(6));
+                            String defaultpass = getStringCellValue(row.getCell(7));
+                            String email = getStringCellValue(row.getCell(8));
+                            String phone = getStringCellValue(row.getCell(9));
 
-                    mAuth.createUserWithEmailAndPassword(studnum + "@gmail.com", defaultpass)
-                            .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                                @Override
-                                public void onComplete(@NonNull Task<AuthResult> task) {
-                                    if (task.isSuccessful()) {
-                                        FirebaseUser user = mAuth.getCurrentUser();
-                                        String studentId = user.getUid();
+                            mAuth.createUserWithEmailAndPassword(studnum + "@gmail.com", defaultpass)
+                                    .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<AuthResult> task) {
+                                            if (task.isSuccessful()) {
 
-                                        // Save the user to the StudentAcc node
-                                        StudentAcc student = new StudentAcc(fname, mname, lname, studnum, phone, defaultpass, email, course, year, section);
-                                        databaseRef.child("StudentAcc")
-                                                .child(course)
-                                                .child(year)
-                                                .child(section)
-                                                .child(studnum)
-                                                .setValue(student);
+                                                // Save the user to the StudentAcc node
+                                                StudentAcc student = new StudentAcc(fname, mname, lname, studnum, phone, defaultpass, email, course, year, section);
+                                                databaseRef.child("StudentAcc")
+                                                        .child(course)
+                                                        .child(year)
+                                                        .child(section)
+                                                        .child(studnum)
+                                                        .setValue(student);
 
-                                        // Save the user to the profiledb node with UID as key
-                                        profiledb profile = new profiledb(fname, mname, lname, studnum, phone, defaultpass, email, course, year, section);
-                                        databaseRef.child("profiledb")
-                                                .child(studentId)
-                                                .setValue(profile);
+                                                // Save the user to the profiledb node with UID as key
+                                                profiledb profile = new profiledb(fname, mname, lname, studnum, phone, defaultpass, email, course, year, section);
+                                                databaseRef.child("profiledb")
+                                                        .child(studnum)
+                                                        .setValue(profile);
 
-                                        Toast.makeText(addStudent.this, "Student added Successfully", Toast.LENGTH_SHORT).show();
-                                    } else {
-                                        Toast.makeText(addStudent.this, "Error: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
-                                    }
-                                }
-                            });
+                                                Toast.makeText(addStudent.this, "Student added successfully", Toast.LENGTH_SHORT).show();
+                                            } else {
+                                                Toast.makeText(addStudent.this, "Error: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                                            }
+                                        }
+                                    });
+                        }
+
+                        workbook.close();
+                        inputStream.close();
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        showToast("Error importing file: " + e.getMessage());
+                    }
                 }
-
-                workbook.close();
-                inputStream.close();
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            });
+            builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            });
+            AlertDialog dialog = builder.create();
+            dialog.show();
         }
 
         private String getStringCellValue(Cell cell) {
             if (cell == null) {
                 return "";
-            } else if (cell.getCellType() == CellType.STRING) {
+            }
+            if (cell.getCellType() == CellType.STRING) {
                 return cell.getStringCellValue();
             } else if (cell.getCellType() == CellType.NUMERIC) {
-                // Convert numeric value to string
                 return String.valueOf((int) cell.getNumericCellValue());
             } else {
                 return "";
             }
         }
+
 
 
     }
