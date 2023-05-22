@@ -3,12 +3,61 @@ package com.example.practice;
 public class QRData {
     private String classId;
     private String professorId;
-    private String subjectId;
+    private String year;
+    private String section;
+    private String location;
+    private String term;
 
-    public QRData(String classId, String professorId, String subjectId) {
+    public void setClassId(String classId) {
+        this.classId = classId;
+    }
+
+    public void setSubjectId(String subjectId) {
+    }
+
+    public void setProfessorId(String professorId) {
+        this.professorId = professorId;
+    }
+
+    public String getYear() {
+        return year;
+    }
+
+    public void setYear(String year) {
+        this.year = year;
+    }
+
+    public String getSection() {
+        return section;
+    }
+
+    public void setSection(String section) {
+        this.section = section;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public String getTerm() {
+        return term;
+    }
+
+    public void setTerm(String term) {
+        this.term = term;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public QRData(String classId,String professorId,  String year, String section, String location, String term) {
         this.classId = classId;
         this.professorId = professorId;
-        this.subjectId = subjectId;
+        this.year = year;
+        this.section = section;
+        this.location = location;
+        this.term = term;
     }
 
     public String getClassId() {
@@ -19,7 +68,4 @@ public class QRData {
         return professorId;
     }
 
-    public String getSubjectId() {
-        return subjectId;
-    }
 }

@@ -3,25 +3,31 @@ package com.example.practice;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import android.app.AlarmManager;
-import android.app.PendingIntent;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import android.Manifest;
 import android.content.Intent;
 import android.content.Context;
-import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.example.practice.databinding.ActivityQrGeneratorBinding;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.button.MaterialButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -35,9 +41,9 @@ import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
-
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -49,17 +55,20 @@ import java.util.Map;
 public class qr_generator extends AppCompatActivity {
     MaterialButton qrbtn, savebtn;
     ImageView imageview, barimageview;
-    Spinner term, courses, classid;
+    Spinner year, section, term;
     Bitmap bitmap;
     FirebaseUser user;
-    TextView prof;
+    TextView prof, loc;
+    public static FusedLocationProviderClient fusedLocationProviderClient;
+    public static int REQUEST_CODE = 100;
+    AutoCompleteTextView courses;
+    ArrayList<String> courseLists, profList, subjectList;
+    private ArrayAdapter<String> courseAdapters, profAdapter, subAdapter;
     private DatabaseReference enrollSubRef;
     private static final int STORAGE_PERMISSION_CODE = 100;
     ActivityQrGeneratorBinding activityQrGeneratorBinding;
-    ArrayList<String> subjectList;
-    ArrayAdapter<String> subAdapter;
     DatabaseReference dbref;
-    Map<String, Object> enrollSubData; // Added for storing enrollSub data
+    Map<String, Object> enrollSubData;
     public static String profUid;
 
     @Override
@@ -70,113 +79,91 @@ public class qr_generator extends AppCompatActivity {
 
         qrbtn = findViewById(R.id.qr_id);
         savebtn = findViewById(R.id.save_id);
-        courses = findViewById(R.id.course);
         imageview = findViewById(R.id.imageview_id);
         barimageview = findViewById(R.id.barimageview_image);
-        term = findViewById(R.id.terms);
-        classid = findViewById(R.id.id);
-        prof = findViewById(R.id.prof);
+        courses = findViewById(R.id.subject);
+        year = findViewById(R.id.year);
+        section = findViewById(R.id.section);
+        loc = findViewById(R.id.location);
+        term = findViewById(R.id.term);
         subjectList = new ArrayList<>();
         FirebaseDatabase database = FirebaseDatabase.getInstance();
-// Specify the "profTracker" node as the reference
-        DatabaseReference profTrackerRef = database.getReference("profTracker");
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+        courseLists = new ArrayList<>();
+
         ArrayAdapter<CharSequence> termAdapter = ArrayAdapter.createFromResource(this,
                 R.array.term_options, android.R.layout.simple_spinner_item);
         termAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        term.setAdapter(termAdapter);
+        NothingSelectedSpinnerAdapter termSpinnerAdapter = new NothingSelectedSpinnerAdapter(
+                termAdapter,
+                R.layout.spinner_prompt_item,
+                this,
+                "Select Term");
+        term.setAdapter(termSpinnerAdapter);
+        ArrayAdapter<CharSequence> yearLevelAdapter = ArrayAdapter.createFromResource(this,
+                R.array.year_options, android.R.layout.simple_spinner_item);
+        yearLevelAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        NothingSelectedSpinnerAdapter yearLevelSpinnerAdapter = new NothingSelectedSpinnerAdapter(
+                yearLevelAdapter,
+                R.layout.spinner_prompt_item,
+                this,
+                "Select Year Level");
+        year.setAdapter(yearLevelSpinnerAdapter);
+
+        ArrayAdapter<CharSequence> sectionAdapter = ArrayAdapter.createFromResource(this,
+                R.array.section_options, android.R.layout.simple_spinner_item);
+        sectionAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        NothingSelectedSpinnerAdapter nothingSelectedAdapter = new NothingSelectedSpinnerAdapter(
+                sectionAdapter,
+                R.layout.spinner_prompt_item,
+                this,
+                "Select Section");
+        section.setAdapter(nothingSelectedAdapter);
 
         dbref = FirebaseDatabase.getInstance().getReference();
-        enrollSubRef = FirebaseDatabase.getInstance().getReference("enrollSub");
+        enrollSubRef = FirebaseDatabase.getInstance().getReference("subList");
 
-        String professorUid = getCurrentProfessorUid();
-        if (professorUid != null) {
-            populateSubjectSpinner(professorUid);
-        }
-        courses.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long l) {
-                String selectedSubject = adapterView.getItemAtPosition(position).toString();
-                populateClassIdsSpinner(professorUid, selectedSubject);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-
-            }
-        });
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             profUid = user.getUid();
         }
-        DatabaseReference profRef = dbref.child(profUid);
-        profRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        dbref = FirebaseDatabase.getInstance().getReference();
+        dbref.child("subList").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                for (DataSnapshot childSnapshot : snapshot.getChildren()) {
+                    String spinner = childSnapshot.child("subject").getValue(String.class);
+                    subjectList.add(spinner);
 
-                if (snapshot.exists()) {
-                    subjectList.clear();
-
-                    for (DataSnapshot courseSnapshot : snapshot.getChildren()) {
-                        String courseName = courseSnapshot.getKey();
-                        subjectList.add(courseName);
-                        // Retrieve class IDs under the course
-                        for (DataSnapshot classSnapshot : courseSnapshot.getChildren()) {
-                            String classId = classSnapshot.getKey();
-                            subjectList.add(classId);
-                        }
-                    }
-
-                    subAdapter = new ArrayAdapter<>(qr_generator.this, android.R.layout.simple_dropdown_item_1line, subjectList);
+                    subAdapter = new ArrayAdapter<String>(qr_generator.this, android.R.layout.simple_dropdown_item_1line, subjectList);
                     courses.setAdapter(subAdapter);
-                    classid.setAdapter(subAdapter);
                 }
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                // Handle onCancelled if needed
+
             }
         });
+        DatabaseReference profRef = dbref.child(profUid);
 
         // Retrieve enrollSub data
-        DatabaseReference enrollSubRef = dbref.child("enrollSub");
-        enrollSubRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()) {
-                    enrollSubData = (Map<String, Object>) snapshot.getValue();
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                // Handle onCancelled if needed
-            }
-        });
-
-        classid.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String selectedClassId = parent.getItemAtPosition(position).toString();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                // Handle the case where no item is selected
-            }
-        });
-
 
         qrbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String classId = classid.getSelectedItem().toString().trim();
-                String terms = term.getSelectedItem().toString().trim();
-                String subject = courses.getSelectedItem().toString().trim();
+                String years = year.getSelectedItem().toString().trim();
+                String sections = section.getSelectedItem().toString().trim();
+                String subject = courses.getText().toString();
                 String profUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                String classId = subject + " " + years + " " + sections;
+                String terms = term.getSelectedItem().toString().trim();
+                getLocation();
+                String locationString = loc.getText().toString();
+
                 ///prof.setText(profUid);
-                // Combine the selected class ID, term, and subject with a delimiter "|"
-                String qrData = classId + "|" + terms + "|" + subject + "|" + profUid;
+
+                String qrData = classId + "|" + years + "|" + terms + "|" + subject + "|" + sections + "|" + profUid + "|" + locationString;
 
                 MultiFormatWriter writer = new MultiFormatWriter();
                 try {
@@ -194,78 +181,12 @@ public class qr_generator extends AppCompatActivity {
             }
         });
 
-
         savebtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (bitmap != null) {
                     saveImage();
                 }
-            }
-        });
-    }
-    private String getCurrentProfessorUid() {
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        if (currentUser != null) {
-            return currentUser.getUid();
-        }
-        return null;
-    }
-    private void populateClassIdsSpinner(String professorUid, String selectedSubject) {
-        DatabaseReference classIdRef = enrollSubRef.child(professorUid).child(selectedSubject);
-        classIdRef.addListenerForSingleValueEvent(new ValueEventListener(){
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()) {
-                    List<String> classIdList = new ArrayList<>();
-
-                    for (DataSnapshot classIdSnapshot : snapshot.getChildren()) {
-                        String classId = classIdSnapshot.getKey();
-                        classIdList.add(classId);
-                    }
-
-                    ArrayAdapter<String> classIdAdapter = new ArrayAdapter<>(qr_generator.this,
-                            android.R.layout.simple_spinner_item, classIdList);
-                    classIdAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                    classid.setAdapter(classIdAdapter);
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                // Handle the error if necessary
-            }
-        });
-    }
-    private void populateSubjectSpinner(String professorUid) {
-        DatabaseReference subjectRef = enrollSubRef.child(professorUid);
-        subjectRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()) {
-                    List<String> subjectList = new ArrayList<>();
-
-                    for (DataSnapshot subjectSnapshot : snapshot.getChildren()) {
-                        String subject = subjectSnapshot.getKey();
-                        subjectList.add(subject);
-                    }
-
-                    ArrayAdapter<String> subjectAdapter = new ArrayAdapter<>(qr_generator.this,
-                            android.R.layout.simple_spinner_item, subjectList);
-                    subjectAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                    courses.setAdapter(subjectAdapter);
-
-                    // Select the first subject by default
-                    if (!subjectList.isEmpty()) {
-                        String firstSubject = subjectList.get(0);
-                        populateClassIdsSpinner(professorUid, firstSubject);
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                // Handle the error if necessary
             }
         });
     }
@@ -288,28 +209,28 @@ public class qr_generator extends AppCompatActivity {
 
             Toast.makeText(getApplicationContext(), "File is Saved in  " + file, Toast.LENGTH_LONG).show();
 
-            String selectedTerm = term.getSelectedItem().toString();
-            String selectedCourse = courses.getSelectedItem().toString().trim();
-            String enteredClassId = classid.getSelectedItem().toString().trim();
+            String years = year.getSelectedItem().toString();
+            String course = courses.getText().toString().trim();
+            String sections = section.getSelectedItem().toString().trim();
+            String terms = term.getSelectedItem().toString().trim();
+            String classid = course + " " + sections;
             String profUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            String locationString = loc.getText().toString();
 
-            if (selectedCourse.isEmpty() || enteredClassId.isEmpty()) {
+            if (course.isEmpty() || sections.isEmpty()) {
                 Toast.makeText(getApplicationContext(), "Please enter Course ID and Class ID", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-
-            String qrData = getQRCodeData(selectedCourse, enteredClassId, selectedTerm, profUid);
+            QRData qr = new QRData(classid, profUid, years, sections, locationString, terms);
             String currentDate = getCurrentDate();
             DatabaseReference qrDataRef = FirebaseDatabase.getInstance().getReference().child("QRdata");
 
             qrDataRef.child(profUid)
-                    .child(selectedCourse)
-                    .child(enteredClassId)
-                    .child(selectedTerm)
-                    .child(getCurrentDate())
-                    .child("students")
-                    .setValue("Present")
+                    .child(classid)
+                    .child(currentDate)
+                    .child(years)
+                    .setValue(qr)
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
                             // QR code data saved successfully
@@ -324,22 +245,21 @@ public class qr_generator extends AppCompatActivity {
         }
     }
 
-    private String getQRCodeData(String selectedCourse, String enteredClassId, String selectedTerm, String profUid) {
+  /*  private String getQRCodeData(String course, String sections, String years, String profUid, String locationString) {
         if (enrollSubData != null) {
-            Map<String, Object> courseData = (Map<String, Object>) enrollSubData.get(selectedCourse);
+            Map<String, Object> courseData = (Map<String, Object>) enrollSubData.get(course);
             if (courseData != null) {
-                Map<String, Object> classData = (Map<String, Object>) courseData.get(enteredClassId);
+                Map<String, Object> classData = (Map<String, Object>) courseData.get(sections);
                 if (classData != null) {
-                    Object qrDataObj = classData.get(selectedTerm);
+                    Object qrDataObj = classData.get(years);
                     // Obtain a reference to the Firebase Realtime Database
                     FirebaseDatabase database = FirebaseDatabase.getInstance();
                     DatabaseReference profTrackerRef = database.getReference("profTracker");
 
                     if (qrDataObj != null) {
-                        // Append profUid to the QR code data
-                        String qrCodeData = qrDataObj.toString() + " Prof UID: " + profUid;
+                        String qrCodeData = qrDataObj.toString() + " Prof UID: " + profUid + " Location: " + locationString;
 
-                        profTrackerRef.child(profUid).child(selectedCourse).child(enteredClassId).child(selectedTerm)
+                        profTrackerRef.child(profUid).child(course).child(sections).child(years)
                                 .child(getCurrentDate()).child("profUid").setValue(profUid)
                                 .addOnCompleteListener(task -> {
                                     if (task.isSuccessful()) {
@@ -351,12 +271,11 @@ public class qr_generator extends AppCompatActivity {
                                     }
                                 });
                     }
-
                 }
             }
         }
         return ""; // Return empty string if QR code data is not found
-    }
+    } */
 
     private String getCurrentDate() {
         Date date = Calendar.getInstance().getTime();
@@ -369,4 +288,65 @@ public class qr_generator extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         // Handle activity result if needed
     }
+    private void getLocation() {
+
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            fusedLocationProviderClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
+                @Override
+                public void onSuccess(Location location) {
+
+                    if (location != null) {
+                        try {
+                            Geocoder geocoder = new Geocoder(qr_generator.this, Locale.getDefault());
+
+                            List<Address> addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
+                            loc.setText("Location: " + addresses.get(0).getAddressLine(0)
+                            );
+                        } catch (IOException e) {
+
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            });
+        } else {
+
+            askPermission();
+
+
+        }
+
+
+    }
+
+    private void askPermission() {
+
+        ActivityCompat.requestPermissions(qr_generator.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_CODE);
+
+
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull @org.jetbrains.annotations.NotNull String[] permissions, @NonNull @org.jetbrains.annotations.NotNull int[] grantResults) {
+
+        if (requestCode == REQUEST_CODE) {
+
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+
+                getLocation();
+
+            } else {
+
+
+                Toast.makeText(qr_generator.this, "Please provide the required permission", Toast.LENGTH_SHORT).show();
+
+            }
+
+
+        }
+
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
 }

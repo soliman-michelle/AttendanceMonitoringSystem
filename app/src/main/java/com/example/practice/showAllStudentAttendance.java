@@ -6,6 +6,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -35,12 +36,13 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 
 public class showAllStudentAttendance extends AppCompatActivity {
     private TableLayout tableLayout;
     private DatabaseReference attendanceRef;
     private TextView subjectTextView;
-    private TextView termTextView;
+    private TextView dateTextView;
 
     private static final int REQUEST_CODE = 1;
 
@@ -51,7 +53,7 @@ public class showAllStudentAttendance extends AppCompatActivity {
 
         tableLayout = findViewById(R.id.tableLayout);
         subjectTextView = findViewById(R.id.subject);
-        termTextView = findViewById(R.id.term);
+        dateTextView = findViewById(R.id.date);
 
         // Retrieve the selected values from the intent
         Intent intent = getIntent();
@@ -59,10 +61,12 @@ public class showAllStudentAttendance extends AppCompatActivity {
         String selectedSubject = intent.getStringExtra("subject");
         String selectedClassId = intent.getStringExtra("classId");
         String selectedTerm = intent.getStringExtra("term");
+        String selectedDate = intent.getStringExtra("Date");
+        List<String> attendanceDataList = intent.getStringArrayListExtra("attendanceDataList");
 
         // Set the subject and term in TextViews
         subjectTextView.setText(selectedSubject);
-        termTextView.setText(selectedTerm);
+        dateTextView.setText(selectedDate);
 
         // Fetch the student attendance data from the database
         attendanceRef = FirebaseDatabase.getInstance().getReference().child("profTracker");
@@ -82,11 +86,12 @@ public class showAllStudentAttendance extends AppCompatActivity {
             }
         });
 
-        if (professorId != null && selectedSubject != null && selectedClassId != null && selectedTerm != null) {
+        if (professorId != null && selectedSubject != null && selectedClassId != null && selectedTerm != null && selectedDate != null) {
             attendanceRef = attendanceRef.child(professorId)
                     .child(selectedSubject)
                     .child(selectedClassId)
-                    .child(selectedTerm);
+                    .child(selectedTerm)
+                    .child(selectedDate);
         } else {
             // Handle the case where any of the variables is null
             // For example, you can show an error message or take appropriate action
@@ -104,37 +109,12 @@ public class showAllStudentAttendance extends AppCompatActivity {
                     nameHeaderTextView.setText("Name");
                     headerRow.addView(nameHeaderTextView);
 
-                    // Store the attendance count for each student
-                    HashMap<String, Integer> studentAttendanceCount = new HashMap<>();
-
-                    // Create a separate HashMap to track whether attendance is present on each date for each student
-                    HashMap<String, HashMap<String, Boolean>> studentAttendanceStatus = new HashMap<>();
-
                     // Iterate through the dates and add them as headers
                     for (DataSnapshot dateSnapshot : dataSnapshot.getChildren()) {
                         String date = dateSnapshot.getKey(); // Get the date from the snapshot
                         TextView dateHeaderTextView = new TextView(showAllStudentAttendance.this);
                         dateHeaderTextView.setText(date);
                         headerRow.addView(dateHeaderTextView);
-
-                        // Iterate through the student attendance data for each date
-                        for (DataSnapshot studentSnapshot : dateSnapshot.getChildren()) {
-                            String studentName = studentSnapshot.child("name").getValue(String.class);
-                            String status = studentSnapshot.child("status").getValue(String.class);
-
-                            // If the status is "Present" and the student name is not in the attendance count map, add it with an initial count of 1
-                            if (status.equalsIgnoreCase("Present") && !studentAttendanceCount.containsKey(studentName)) {
-                                studentAttendanceCount.put(studentName, 1);
-                            }
-
-                            // Create a HashMap for the student if it doesn't exist
-                            if (!studentAttendanceStatus.containsKey(studentName)) {
-                                studentAttendanceStatus.put(studentName, new HashMap<>());
-                            }
-
-                            // Set the attendance status for the date and student
-                            studentAttendanceStatus.get(studentName).put(date, status.equalsIgnoreCase("Present"));
-                        }
                     }
 
                     TextView totalHeaderTextView = new TextView(showAllStudentAttendance.this);
@@ -144,8 +124,10 @@ public class showAllStudentAttendance extends AppCompatActivity {
                     // Add the header row to the table layout
                     tableLayout.addView(headerRow);
 
-                    // Iterate through the student attendance count map
-                    for (String studentName : studentAttendanceCount.keySet()) {
+                    // Iterate through the student attendance data
+                    for (DataSnapshot studentSnapshot : dataSnapshot.getChildren()) {
+                        String studentName = studentSnapshot.child("name").getValue(String.class);
+
                         // Create a new row for each student
                         TableRow row = new TableRow(showAllStudentAttendance.this);
 
@@ -160,18 +142,18 @@ public class showAllStudentAttendance extends AppCompatActivity {
                         for (DataSnapshot dateSnapshot : dataSnapshot.getChildren()) {
                             String date = dateSnapshot.getKey(); // Get the date from the snapshot
 
-                            // Check if attendance is present for the date and student
-                            boolean isPresent = false;
-                            if (studentAttendanceStatus.containsKey(studentName) && studentAttendanceStatus.get(studentName).containsKey(date)) {
-                                isPresent = studentAttendanceStatus.get(studentName).get(date);
+                            String status = "Absent"; // Default status is "Absent"
+                            DataSnapshot studentAttendanceSnapshot = dateSnapshot.child(studentName);
+                            if (studentAttendanceSnapshot.exists()) {
+                                status = studentAttendanceSnapshot.child("status").getValue(String.class);
                             }
 
                             // Create a TextView for each status
                             TextView attendanceStatusTextView = new TextView(showAllStudentAttendance.this);
-                            attendanceStatusTextView.setText(isPresent ? "Present" : "-");
+                            attendanceStatusTextView.setText(status);
                             row.addView(attendanceStatusTextView);
 
-                            if (isPresent) {
+                            if (status.equalsIgnoreCase("Present")) {
                                 totalAttendance++; // Increment total attendance count if status is "Present"
                             }
                         }
@@ -186,6 +168,7 @@ public class showAllStudentAttendance extends AppCompatActivity {
                     }
                 }
             }
+
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {

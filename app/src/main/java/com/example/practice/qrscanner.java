@@ -86,9 +86,9 @@ public class qrscanner extends Drawable implements ZXingScannerView.ResultHandle
         // Check if the splitData array contains at least 3 elements
         if (splitData.length >= 4) {
             String classId = splitData[0].trim();
-            String term = splitData[1].trim();
-            String subject = splitData[2].trim();
-            String profuid = splitData[3].trim();
+            String term = splitData[2].trim();
+            String subject = splitData[3].trim();
+            String profuid = splitData[5].trim();
 
             scanner.term.setText(term);
             scanner.qrtext.setText(classId);
@@ -129,7 +129,7 @@ public class qrscanner extends Drawable implements ZXingScannerView.ResultHandle
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
                             if (task.isSuccessful()) {
-                                scanner.qrtext.setText("Course: " + classId);
+                                scanner.qrtext.setText("ClassID: " + classId);
                                 scanner.date.setText("Date: " + formattedDate);
                                 scanner.arrival.setText("Arrival time: " + time);
                                 scanner.name.setText("Name: " + name);
@@ -142,8 +142,8 @@ public class qrscanner extends Drawable implements ZXingScannerView.ResultHandle
                                 // Store attendance in the classStudents node
                                 profTrackerRef
                                         .child(id)
-                                        .child(terms)
                                         .child(classId)
+                                        .child(terms)
                                         .child(course)
                                         .child(formattedDate)
                                         .child(studNum).setValue(studentDatas);

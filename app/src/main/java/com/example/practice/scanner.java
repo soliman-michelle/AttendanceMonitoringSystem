@@ -10,6 +10,7 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -68,6 +69,7 @@ public class scanner extends Drawable {
             }
         });
     }
+
     private void getLocation() {
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
@@ -115,30 +117,60 @@ public class scanner extends Drawable {
 
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
+
     private void saveUser() {
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("StudentAcc");
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("profiledb");
-        FirebaseAuth auth = FirebaseAuth.getInstance();
-        FirebaseUser user = auth.getCurrentUser();
-        String userKey = user.getUid();
+        if (user != null) {
+            String email = user.getEmail();
 
-        ref.child(userKey).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                String firstname = dataSnapshot.child("fname").getValue(String.class);
-                String middlename = dataSnapshot.child("mname").getValue(String.class);
-                String lastname = dataSnapshot.child("lname").getValue(String.class);
-                String fullName = firstname + " " + middlename + " " + lastname;
-                String studNumString = dataSnapshot.child("studnum").getValue(String.class);
+            // Extract the student number from the email
+            String studentNumber = extractStudentNumber(email);
 
-                name.setText("" + fullName);
-                studNum.setText("" + studNumString);
+            if (studentNumber != null) {
+                DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("StudentAcc");
+                databaseReference.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.exists()) {
+                            DataSnapshot bscsSnapshot = dataSnapshot.child("BSCS");
+                            if (bscsSnapshot.exists()) {
+                                for (DataSnapshot yearSnapshot : bscsSnapshot.getChildren()) {
+                                    for (DataSnapshot sectionSnapshot : yearSnapshot.getChildren()) {
+                                        DataSnapshot studentSnapshot = sectionSnapshot.child(studentNumber);
+                                        if (studentSnapshot.exists()) {
+                                            String firstname = studentSnapshot.child("fname").getValue(String.class);
+                                            String middlename = studentSnapshot.child("mname").getValue(String.class);
+                                            String lastname = studentSnapshot.child("lname").getValue(String.class);
+                                            String fullName = firstname + " " + middlename + " " + lastname;
+                                            String studNumString = studentSnapshot.child("studnum").getValue(String.class);
+
+                                            name.setText(fullName);
+                                            studNum.setText(studNumString);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Log.e("DATABASE", "Error retrieving data from database", error.toException());
+                    }
+                });
             }
+        }
+    }
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                throw error.toException();
+    private String extractStudentNumber(String email) {
+        if (email != null && email.contains("@")) {
+            String[] parts = email.split("@");
+            if (parts.length > 0) {
+                return parts[0];
             }
-        });
-}
+        }
+        return null;
+    }
 }

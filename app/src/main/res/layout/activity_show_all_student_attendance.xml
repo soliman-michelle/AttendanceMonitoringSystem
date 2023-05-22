@@ -13,13 +13,13 @@
         android:layout_marginBottom="11dp"
         android:gravity="center"
         android:text="TextView"
-        app:layout_constraintBottom_toTopOf="@+id/term"
+        app:layout_constraintBottom_toTopOf="@+id/date"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/term"
+        android:id="@+id/date"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="11dp"
@@ -34,7 +34,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@+id/exportButton"
-        app:layout_constraintTop_toBottomOf="@id/term">
+        app:layout_constraintTop_toBottomOf="@id/date">
 
         <TableLayout
             android:id="@+id/tableLayout"

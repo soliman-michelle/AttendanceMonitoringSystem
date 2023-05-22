@@ -274,17 +274,15 @@ public class addSubject extends AppCompatActivity {
                             schedref = FirebaseDatabase.getInstance().getReference("studentSched");
                             subjectsList subject = new subjectsList(courseName, programNames, yearLevel, terms, professors, day, room, courseCode, units, startTime + " - " + endTime, sections);
                             studentSched sched = new studentSched(courseName, startTime + " - " + endTime, day, room);
-                            subList sub = new subList(course);
+                            subList sub = new subList(courseName);
                             classref = FirebaseDatabase.getInstance().getReference("subList");
 
-                            classref.child(course).setValue(sub);
+                            classref.child(courseName).setValue(sub);
                             schedref.child(course)
                                     .child(day).setValue(sched);
                             // Write the new section to the database
-                            programsRef.child(programNames)
-                                    .child(yearLevel)
-                                    .child(sections)
-                                    .child(course)
+                            programsRef.child(professors)
+                                    .child(courseName)
                                     .child(day)
                                     .setValue(sched)
                                     .addOnSuccessListener(new OnSuccessListener<Void>() {
@@ -443,16 +441,14 @@ public class addSubject extends AppCompatActivity {
                             // Data doesn't exist, save the new data
                             subjectsList subject = new subjectsList(courseName, programNames, finalYearLevel, terms, professors, day, room, courseCode, finalUnits, time, section);
                             studentSched sched = new studentSched(courseName, room, time, day);
-                            subList sub = new subList(course);
+                            subList sub = new subList(courseName);
                             classref = FirebaseDatabase.getInstance().getReference("subList");
 
-                            classref.child(course).setValue(sub);
+                            classref.child(courseName).setValue(sub);
                             schedref.child(course)
                                     .child(day).setValue(sched);
                             programsRef.child(professors)
-                                    .child(terms)
-                                    .child(day)
-                                    .child(course)
+                                    .child(courseName)
                                     .setValue(subject);
 
                             showToast("Data added successfully for " + courseKey);
