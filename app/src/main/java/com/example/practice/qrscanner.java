@@ -121,41 +121,60 @@ public class qrscanner extends Drawable implements ZXingScannerView.ResultHandle
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference("studentAT");
         DatabaseReference profTrackerRef = FirebaseDatabase.getInstance().getReference("profTracker");
 
-            StoreAttendance storeAttendance = new StoreAttendance(course, classId, terms, formattedDate, time, locationString, name, studNum, id);
-            studentTrack track = new studentTrack(name, studNum, attendanceStatus, time);
+        StoreAttendance storeAttendance = new StoreAttendance(course, classId, terms, formattedDate, time, locationString, name, studNum, id);
+        studentTrack track = new studentTrack(name, studNum, attendanceStatus, time);
 
         ref.child(currentUser.getUid()).child(terms).child(formattedDate).child(studNum).setValue(track)
-                    .addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            if (task.isSuccessful()) {
-                                scanner.qrtext.setText("ClassID: " + classId);
-                                scanner.date.setText("Date: " + formattedDate);
-                                scanner.arrival.setText("Arrival time: " + time);
-                                scanner.name.setText("Name: " + name);
-                                scanner.studNum.setText("Student Number: " + studNum);
-                                String attendanceStatus = "Present";
-                                Toast.makeText(qrscanner.this, "Saved Attendance", Toast.LENGTH_SHORT).show();
-                                studentTrack track = new studentTrack(name, studNum, attendanceStatus, time);
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            scanner.qrtext.setText("ClassID: " + classId);
+                            scanner.date.setText("Date: " + formattedDate);
+                            scanner.arrival.setText("Arrival time: " + time);
+                            scanner.name.setText("Name: " + name);
+                            scanner.studNum.setText("Student Number: " + studNum);
+                            String attendanceStatus = "Present";
+                            Toast.makeText(qrscanner.this, "Saved Attendance", Toast.LENGTH_SHORT).show();
+                            studentTrack track = new studentTrack(name, studNum, attendanceStatus, time);
 
-                                studentData studentDatas = new studentData(studNum, attendanceStatus,name, date);
-                                // Store attendance in the classStudents node
-                                profTrackerRef
-                                        .child(id)
-                                        .child(classId)
-                                        .child(terms)
-                                        .child(course)
-                                        .child(formattedDate)
-                                        .child(studNum).setValue(studentDatas);
+                            studentData studentDatas = new studentData(studNum, attendanceStatus, name, date);
+                            // Store attendance in the classStudents node
+                            DatabaseReference studentRef = profTrackerRef
+                                    .child(id)
+                                    .child(classId)
+                                    .child(terms)
+                                    .child(course)
+                                    .child(formattedDate)
+                                    .child(studNum);
 
-                                onBackPressed();
-                            } else {
-                                // Save failed
-                                Toast.makeText(qrscanner.this, "Failed to save attendance.", Toast.LENGTH_SHORT).show();
-                            }
+                            studentRef.setValue(studentDatas)
+                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                        @Override
+                                        public void onSuccess(Void unused) {
+                                            // Set the arrival time
+                                            studentRef.child("arrival").setValue(time)
+                                                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                        @Override
+                                                        public void onComplete(@NonNull Task<Void> task) {
+                                                            if (task.isSuccessful()) {
+                                                                onBackPressed();
+                                                            } else {
+                                                                // Failed to set arrival time
+                                                                Toast.makeText(qrscanner.this, "Failed to set arrival time.", Toast.LENGTH_SHORT).show();
+                                                            }
+                                                        }
+                                                    });
+                                        }
+                                    });
+
+                        } else {
+                            // Save failed
+                            Toast.makeText(qrscanner.this, "Failed to save attendance.", Toast.LENGTH_SHORT).show();
                         }
-                    });
-        }
+                    }
+                });
+    }
     private void getLocation() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             fusedLocationProviderClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
