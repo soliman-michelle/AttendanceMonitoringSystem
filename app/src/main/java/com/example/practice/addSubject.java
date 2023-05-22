@@ -292,6 +292,23 @@ public class addSubject extends AppCompatActivity {
                                         public void onSuccess(Void aVoid) {
                                             // Show toast message for successful addition
                                             Toast.makeText(addSubject.this, "Subject added successfully", Toast.LENGTH_SHORT).show();
+                                            // Clear EditText fields
+                                            coursename.getText().clear();
+                                            unit.getText().clear();
+                                            coursenumber.getText().clear();
+                                            roomNumber.getText().clear();
+
+                                            // Clear Spinners
+                                            program.setSelection(0);
+                                            year.setSelection(0);
+                                            section.setSelection(0);
+                                            prof.setSelection(0);
+                                            term.setSelection(0);
+                                            days.setSelection(0);
+
+                                            // Clear time buttons
+                                            startTimeButton.setText("Select Start Time");
+                                            endTimeButton.setText("Select End Time");
                                         }
                                     })
                                     .addOnFailureListener(new OnFailureListener() {
@@ -299,6 +316,7 @@ public class addSubject extends AppCompatActivity {
                                         public void onFailure(@NonNull Exception e) {
                                             // Show toast message for failure
                                             Toast.makeText(addSubject.this, "Failed to add subject", Toast.LENGTH_SHORT).show();
+
                                         }
                                     });
                         }
