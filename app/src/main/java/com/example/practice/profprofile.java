@@ -20,7 +20,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 public class profprofile extends profdrawable {
-    TextView nameLabel, editname, editusername, editEmail, editPassword, editPhone;
+    TextView nameLabel, editname, editusername, editEmail, editPhone;
 ActivityProfprofileBinding activityProfprofileBinding;
     FirebaseUser user;
     DatabaseReference databaseReference;
@@ -35,7 +35,6 @@ ActivityProfprofileBinding activityProfprofileBinding;
         editname = findViewById(R.id.editTextName);
         editusername = findViewById(R.id.editTextUsername);
         editEmail = findViewById(R.id.editTextEmail);
-        editPassword = findViewById(R.id.editTextPassword);
         editPhone = findViewById(R.id.editTextPhone);
 
         nameLabel = findViewById(R.id.nameLabel);
@@ -54,14 +53,12 @@ ActivityProfprofileBinding activityProfprofileBinding;
                     String lastname = dataSnapshot.child("lname").getValue(String.class);
                     String user = dataSnapshot.child("username").getValue(String.class);
                     String phonenum = dataSnapshot.child("phone").getValue(String.class);
-                    String pass = dataSnapshot.child("defaultpass").getValue(String.class);
                     String useremail = dataSnapshot.child("email").getValue(String.class);
                     nameLabel.setText(firstname + " " + middlename + " " + lastname);
                     editname.setText(firstname + " " + middlename + " " + lastname);
                     editusername.setText(user);
                     editPhone.setText(phonenum);
                     editEmail.setText(useremail);
-                    editPassword.setText(pass);
                 }
             }
 

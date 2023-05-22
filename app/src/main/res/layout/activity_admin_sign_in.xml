@@ -17,6 +17,10 @@
         android:id="@+id/password1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:drawableRight="@drawable/visibilityoff"
+        android:inputType="textPassword"
+        android:paddingRight="18dp"
+        android:longClickable="false"
         android:hint="Password"
         android:layout_marginTop="50dp"
         android:layout_below="@+id/username1"/>

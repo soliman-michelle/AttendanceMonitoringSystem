@@ -89,6 +89,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:layout_marginTop="20dp"
+                app:endIconMode="password_toggle"
                 android:hint="Password"
                 android:textColor="@color/black">
 

@@ -36,7 +36,6 @@ public class Profile extends AppCompatActivity {
         editname = findViewById(R.id.editTextName);
         editusername = findViewById(R.id.editTextUsername);
         editEmail = findViewById(R.id.editTextEmail);
-        editPassword = findViewById(R.id.editTextPassword);
         editPhone = findViewById(R.id.editTextPhone);
 
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
@@ -63,14 +62,13 @@ public class Profile extends AppCompatActivity {
                                             String lastname = studentSnapshot.child("lname").getValue(String.class);
                                             String user = studentSnapshot.child("studnum").getValue(String.class);
                                             String phonenum = studentSnapshot.child("phone").getValue(String.class);
-                                            String pass = studentSnapshot.child("defaultpass").getValue(String.class);
                                             String useremail = studentSnapshot.child("email").getValue(String.class);
                                             nameLabel.setText(firstname + " " + middlename + " " + lastname);
                                             editname.setText(firstname + " " + middlename + " " + lastname);
                                             editusername.setText(user);
                                             editPhone.setText(phonenum);
                                             editEmail.setText(useremail);
-                                            editPassword.setText(pass);
+
                                             return; // Exit the listener if the student number is found
                                         }
                                     }
