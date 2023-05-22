@@ -12,12 +12,13 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -35,15 +36,17 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 public class showAllStudentAttendance extends AppCompatActivity {
-    private TableLayout tableLayout;
+    private ListView listView;
     private DatabaseReference attendanceRef;
     private TextView subjectTextView;
     private TextView dateTextView;
-
+    private List<AttendanceRecord> attendanceList;
+    private AttendanceAdapter adapter;
     private static final int REQUEST_CODE = 1;
 
     @Override
@@ -51,9 +54,10 @@ public class showAllStudentAttendance extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_show_all_student_attendance);
 
-        tableLayout = findViewById(R.id.tableLayout);
+        listView = findViewById(R.id.listView);
         subjectTextView = findViewById(R.id.subject);
         dateTextView = findViewById(R.id.date);
+        attendanceList = new ArrayList<AttendanceRecord>();
 
         // Retrieve the selected values from the intent
         Intent intent = getIntent();
@@ -102,82 +106,61 @@ public class showAllStudentAttendance extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
-                    // Create the header row
-                    TableRow headerRow = new TableRow(showAllStudentAttendance.this);
+                    // Clear the attendance list before populating it with new data
+                    attendanceList.clear();
 
-                    TextView nameHeaderTextView = new TextView(showAllStudentAttendance.this);
-                    nameHeaderTextView.setText("Name");
-                    headerRow.addView(nameHeaderTextView);
+                    // Iterate through the filtered data
+                    for (DataSnapshot uidSnapshot : dataSnapshot.getChildren()) {
+                        for (DataSnapshot classSnapshot : uidSnapshot.getChildren()) {
+                            for (DataSnapshot subjectSnapshot : classSnapshot.getChildren()) {
+                                for (DataSnapshot termSnapshot : subjectSnapshot.getChildren()) {
+                                    for (DataSnapshot dateSnapshot : termSnapshot.getChildren()) {
+                                        for (DataSnapshot studentIdSnapshot : dateSnapshot.getChildren()) {
+                                            for (DataSnapshot studentSnapshot : studentIdSnapshot.getChildren()) {
+                                                // Get the attendance record for the student
+                                                AttendanceRecord attendance = studentSnapshot.getValue(AttendanceRecord.class);
 
-                    // Iterate through the dates and add them as headers
-                    for (DataSnapshot dateSnapshot : dataSnapshot.getChildren()) {
-                        String date = dateSnapshot.getKey(); // Get the date from the snapshot
-                        TextView dateHeaderTextView = new TextView(showAllStudentAttendance.this);
-                        dateHeaderTextView.setText(date);
-                        headerRow.addView(dateHeaderTextView);
-                    }
+                                                if (attendance != null) {
+                                                    // Extract the student's name, length, arrival, departure, and status from the attendance record
+                                                    String studentName = attendance.getStudentName();
+                                                    String lengthOfStay = attendance.getLength();
+                                                    String arrivalTime = attendance.getArrival();
+                                                    String departureTime = attendance.getDeparture();
+                                                    String status = attendance.getStatus();
 
-                    TextView totalHeaderTextView = new TextView(showAllStudentAttendance.this);
-                    totalHeaderTextView.setText("Total");
-                    headerRow.addView(totalHeaderTextView);
+                                                    // Create an AttendanceRecord object
+                                                    AttendanceRecord attendanceRecord = new AttendanceRecord();
+                                                    attendanceRecord.setStudentName(studentName);
+                                                    attendanceRecord.setLength(lengthOfStay);
+                                                    attendanceRecord.setArrival(arrivalTime);
+                                                    attendanceRecord.setDeparture(departureTime);
+                                                    attendanceRecord.setStatus(status);
 
-                    // Add the header row to the table layout
-                    tableLayout.addView(headerRow);
+                                                    attendanceList.add(attendanceRecord);
 
-                    // Iterate through the student attendance data
-                    for (DataSnapshot studentSnapshot : dataSnapshot.getChildren()) {
-                        String studentName = studentSnapshot.child("name").getValue(String.class);
 
-                        // Create a new row for each student
-                        TableRow row = new TableRow(showAllStudentAttendance.this);
-
-                        // Add the student's name to the row
-                        TextView studentNameTextView = new TextView(showAllStudentAttendance.this);
-                        studentNameTextView.setText(studentName);
-                        row.addView(studentNameTextView);
-
-                        int totalAttendance = 0; // Initialize total attendance count
-
-                        // Iterate through the dates and add the status for each date
-                        for (DataSnapshot dateSnapshot : dataSnapshot.getChildren()) {
-                            String date = dateSnapshot.getKey(); // Get the date from the snapshot
-
-                            String status = "Absent"; // Default status is "Absent"
-                            DataSnapshot studentAttendanceSnapshot = dateSnapshot.child(studentName);
-                            if (studentAttendanceSnapshot.exists()) {
-                                status = studentAttendanceSnapshot.child("status").getValue(String.class);
-                            }
-
-                            // Create a TextView for each status
-                            TextView attendanceStatusTextView = new TextView(showAllStudentAttendance.this);
-                            attendanceStatusTextView.setText(status);
-                            row.addView(attendanceStatusTextView);
-
-                            if (status.equalsIgnoreCase("Present")) {
-                                totalAttendance++; // Increment total attendance count if status is "Present"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
-
-                        // Add the total attendance count to the row
-                        TextView totalAttendanceTextView = new TextView(showAllStudentAttendance.this);
-                        totalAttendanceTextView.setText(String.valueOf(totalAttendance));
-                        row.addView(totalAttendanceTextView);
-
-                        // Add the row to the table layout
-                        tableLayout.addView(row);
                     }
+
+                    // Create the adapter and set it to the ListView
+                    adapter = new AttendanceAdapter(showAllStudentAttendance.this, attendanceList);
+                    listView.setAdapter(adapter);
                 }
             }
-
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
                 // Handle any errors
             }
         });
-    }
 
-    // Check for permission and export to Excel
+    }
     private void checkPermissionAndExport() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -205,35 +188,29 @@ public class showAllStudentAttendance extends AppCompatActivity {
         }
     }
 
-// Rest of your code...
-
     private void exportToExcel() {
         // Create a new workbook
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Attendance");
 
-        // Get the total number of rows and columns in the table layout
-        int rowCount = tableLayout.getChildCount();
-        int columnCount = ((TableRow) tableLayout.getChildAt(0)).getChildCount();
+        // Get the total number of items in the attendance list
+        int itemCount = attendanceList.size();
 
-        // Iterate through the rows and columns and add the data to the Excel sheet
-        for (int i = 0; i < rowCount; i++) {
-            TableRow row = (TableRow) tableLayout.getChildAt(i);
-            Row excelRow = sheet.createRow(i);
+        // Iterate through the items and add them to the Excel sheet
+        for (int i = 0; i < itemCount; i++) {
+            AttendanceRecord attendanceRecord = attendanceList.get(i);
+            String studentName = attendanceRecord.getStudentName();
 
-            for (int j = 0; j < columnCount; j++) {
-                TextView textView = (TextView) row.getChildAt(j);
-                String text = textView.getText().toString();
+            Row row = sheet.createRow(i);
+            Cell cell = row.createCell(0);
+            cell.setCellValue(studentName);
 
-                Cell cell = excelRow.createCell(j);
-                cell.setCellValue(text);
-            }
         }
 
         // Save the workbook to a file
-        String fileName = "attendance.csv";
+        String fileName = "attendance.xlsx";
         File directory = new File(Environment.getExternalStorageDirectory() + "/MyDirectory/");
-        String filePath = getExternalFilesDir(null) + "/" + fileName;
+        String filePath = directory.getAbsolutePath() + "/" + fileName;
 
         try {
             FileOutputStream fileOutputStream = new FileOutputStream(filePath);
@@ -243,6 +220,7 @@ public class showAllStudentAttendance extends AppCompatActivity {
             Toast.makeText(this, "Exported to " + filePath, Toast.LENGTH_SHORT).show();
         } catch (IOException e) {
             e.printStackTrace();
+            Toast.makeText(this, "Failed to export.", Toast.LENGTH_SHORT).show();
         }
 
         // Close the workbook
@@ -250,8 +228,7 @@ public class showAllStudentAttendance extends AppCompatActivity {
             workbook.close();
         } catch (IOException e) {
             e.printStackTrace();
-            Toast.makeText(this, "Failed exported ", Toast.LENGTH_SHORT).show();
-
         }
     }
+
 }

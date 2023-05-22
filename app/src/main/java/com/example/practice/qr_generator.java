@@ -156,7 +156,7 @@ public class qr_generator extends AppCompatActivity {
                 String sections = section.getSelectedItem().toString().trim();
                 String subject = courses.getText().toString();
                 String profUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-                String classId = subject + " " + years + " " + sections;
+                String classId = subject + " " + sections;
                 String terms = term.getSelectedItem().toString().trim();
                 getLocation();
                 String locationString = loc.getText().toString();
@@ -190,8 +190,11 @@ public class qr_generator extends AppCompatActivity {
             }
         });
     }
-        void saveImage() {
+    void saveImage() {
         try {
+            DatabaseReference studentAccRef = FirebaseDatabase.getInstance().getReference("StudentAcc");
+            DatabaseReference classStudentsRef = FirebaseDatabase.getInstance().getReference("classStudents");
+            DatabaseReference profRef = FirebaseDatabase.getInstance().getReference("profTracker");
 
             String path = Environment.getExternalStorageDirectory().toString();
             File directory = new File(path + "/folder/subfolder");
@@ -215,29 +218,103 @@ public class qr_generator extends AppCompatActivity {
             String terms = term.getSelectedItem().toString().trim();
             String classid = course + " " + sections;
             String profUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            Date dateAndTime = Calendar.getInstance().getTime();
+            SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d yyyy", Locale.getDefault());
+            String formattedDate = dateFormat.format(dateAndTime);
             String locationString = loc.getText().toString();
 
-            if (course.isEmpty() || sections.isEmpty()) {
-                Toast.makeText(getApplicationContext(), "Please enter Course ID and Class ID", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            QRData qr = new QRData(classid, profUid, years, sections, locationString, terms);
-            String currentDate = getCurrentDate();
-            DatabaseReference qrDataRef = FirebaseDatabase.getInstance().getReference().child("QRdata");
-
-            qrDataRef.child(profUid)
-                    .child(classid)
-                    .child(currentDate)
+            studentAccRef.child("BSCS")
                     .child(years)
-                    .setValue(qr)
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            // QR code data saved successfully
-                            Toast.makeText(getApplicationContext(), "QR code data saved", Toast.LENGTH_SHORT).show();
-                        } else {
-                            // Failed to save QR code data
-                            Toast.makeText(getApplicationContext(), "Failed to save QR code data", Toast.LENGTH_SHORT).show();
+                    .child(sections)
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            final boolean[] sectionExists = {false};
+                            final boolean[] studentExists = {false};
+
+                            for (DataSnapshot childSnapshot : snapshot.getChildren()) {
+                                String studentId = childSnapshot.getKey();
+                                String fname = childSnapshot.child("fname").getValue(String.class);
+                                String lname = childSnapshot.child("lname").getValue(String.class);
+                                String studentName = fname + " " + lname;
+
+                                DatabaseReference classSectionRef = classStudentsRef.child(classid)
+                                        .child(locationString)
+                                        .child(studentId);
+
+                                DatabaseReference prof = profRef.child(profUid)
+                                        .child(classid)
+                                        .child(course)
+                                        .child(terms)
+                                        .child(formattedDate)
+                                        .child(studentId)
+                                        .child(studentName);
+
+                                String length = ""; // Empty string by default
+                                String arrival= "";
+                                String departure= "";
+                                String status= "";
+                                String date = "";
+
+                                AttendanceRecord attendance = new AttendanceRecord(arrival, length, departure, status, studentName);
+                                // Update the student data in profTracker
+                                prof.child(formattedDate).setValue(attendance);
+                                prof.child(studentId).child("studentName").setValue("");
+                                prof.child(studentId).child("arrival").setValue("");
+                                prof.child(studentId).child("length_stay").setValue("");
+                                prof.child(studentId).child("departure").setValue("");
+                                prof .child(studentId).child("status").setValue("");
+                                classSectionRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                        if (!dataSnapshot.exists()) {
+                                            // Section doesn't exist, create a new section
+                                            classSectionRef.child(studentId).setValue(studentName);
+                                        } else {
+                                            // Section exists, check if the student is already assigned to another class ID for the same subject
+                                            boolean studentAssigned = false;
+                                            for (DataSnapshot sectionSnapshot : dataSnapshot.getChildren()) {
+                                                if (sectionSnapshot.hasChild(studentId)) {
+                                                    // Student is already assigned to another class ID for the same subject
+                                                    studentAssigned = true;
+                                                    break;
+                                                }
+                                            }
+                                            if (!studentAssigned) {
+                                                classSectionRef.child(studentId).setValue(studentName);
+                                            }
+                                        }
+
+                                    }
+
+                                    @Override
+                                    public void onCancelled(@NonNull DatabaseError error) {
+                                        // Handle the error
+                                    }
+                                });
+
+                                studentExists[0] = true;
+                            }
+
+                            if (!sectionExists[0]) {
+                                DatabaseReference sectionRef = classStudentsRef.child(classid)
+                                        .child(locationString)
+                                        .child("section");
+
+                                sectionRef.setValue(sections);
+                            }
+
+                            if (!studentExists[0]) {
+                                // If no students exist in the section, remove the section from the classStudents node
+                                classStudentsRef.child(classid)
+                                        .child(locationString)
+                                        .removeValue();
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+                            // Handle the error
                         }
                     });
         } catch (Exception e) {
@@ -245,39 +322,8 @@ public class qr_generator extends AppCompatActivity {
         }
     }
 
-  /*  private String getQRCodeData(String course, String sections, String years, String profUid, String locationString) {
-        if (enrollSubData != null) {
-            Map<String, Object> courseData = (Map<String, Object>) enrollSubData.get(course);
-            if (courseData != null) {
-                Map<String, Object> classData = (Map<String, Object>) courseData.get(sections);
-                if (classData != null) {
-                    Object qrDataObj = classData.get(years);
-                    // Obtain a reference to the Firebase Realtime Database
-                    FirebaseDatabase database = FirebaseDatabase.getInstance();
-                    DatabaseReference profTrackerRef = database.getReference("profTracker");
 
-                    if (qrDataObj != null) {
-                        String qrCodeData = qrDataObj.toString() + " Prof UID: " + profUid + " Location: " + locationString;
-
-                        profTrackerRef.child(profUid).child(course).child(sections).child(years)
-                                .child(getCurrentDate()).child("profUid").setValue(profUid)
-                                .addOnCompleteListener(task -> {
-                                    if (task.isSuccessful()) {
-                                        // Professor UID stored successfully
-                                        Toast.makeText(getApplicationContext(), "Professor UID stored", Toast.LENGTH_SHORT).show();
-                                    } else {
-                                        // Failed to store professor UID
-                                        Toast.makeText(getApplicationContext(), "Failed to store professor UID", Toast.LENGTH_SHORT).show();
-                                    }
-                                });
-                    }
-                }
-            }
-        }
-        return ""; // Return empty string if QR code data is not found
-    } */
-
-    private String getCurrentDate() {
+                                        private String getCurrentDate() {
         Date date = Calendar.getInstance().getTime();
         SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d yyyy", Locale.getDefault());
         return dateFormat.format(date);

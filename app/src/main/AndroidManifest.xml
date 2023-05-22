@@ -33,9 +33,6 @@
             android:name=".showAllStudentAttendance"
             android:exported="false" />
         <activity
-            android:name=".profAttendanceTrack"
-            android:exported="false" />
-        <activity
             android:name=".viewSubject"
             android:exported="false" />
         <activity
