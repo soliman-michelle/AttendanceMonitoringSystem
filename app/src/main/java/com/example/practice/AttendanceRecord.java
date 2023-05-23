@@ -6,7 +6,9 @@ public class AttendanceRecord {
     private String lengthOfStay;
     private String departure;
     private String status;
-
+    public AttendanceRecord() {
+        // Default constructor required for Firebase serialization
+    }
     public AttendanceRecord(String arrival, String length, String departure, String status, String studentName) {
     }
 

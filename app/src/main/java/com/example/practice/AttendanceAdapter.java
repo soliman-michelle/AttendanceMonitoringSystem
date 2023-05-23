@@ -12,34 +12,35 @@ import androidx.annotation.Nullable;
 
 import java.util.List;
 
-public class AttendanceAdapter extends ArrayAdapter<studentData> {
-    private Context context;
-    private List<studentData> attendanceList;
+public class AttendanceAdapter extends ArrayAdapter<AttendanceRecord> {
+    private LayoutInflater inflater;
 
-    public AttendanceAdapter(Context context, List<studentData> attendanceList) {
+    public AttendanceAdapter(Context context, List<AttendanceRecord> attendanceList) {
         super(context, 0, attendanceList);
-        this.context = context;
-        this.attendanceList = attendanceList;
+        inflater = LayoutInflater.from(context);
     }
 
-    @NonNull
     @Override
-    public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+    public View getView(int position, View convertView, ViewGroup parent) {
         View itemView = convertView;
         if (itemView == null) {
-            itemView = LayoutInflater.from(context).inflate(R.layout.attendance_item, parent, false);
+            itemView = inflater.inflate(R.layout.attendance_item, parent, false);
         }
 
-        // Get the current attendance record
-        studentData attendance = attendanceList.get(position);
+        AttendanceRecord attendanceRecord = getItem(position);
+        if (attendanceRecord != null) {
+            TextView nameTextView = itemView.findViewById(R.id.nameTextView);
+            TextView arrivalTextView = itemView.findViewById(R.id.arrivalTextView);
+            TextView departureTextView = itemView.findViewById(R.id.departureTextView);
+            TextView lengthTextView = itemView.findViewById(R.id.lengthOfStayTextView);
+            TextView statusTextView = itemView.findViewById(R.id.statusTextView);
 
-        TextView nameTextView = itemView.findViewById(R.id.nameTextView);
-        TextView arrivalTextView = itemView.findViewById(R.id.arrivalTextView);
-        TextView statusTextView = itemView.findViewById(R.id.statusTextView);
-
-        nameTextView.setText(attendance.getName());
-        arrivalTextView.setText(attendance.getArrival());
-        statusTextView.setText(attendance.getStatus());
+            nameTextView.setText(attendanceRecord.getStudentName());
+            arrivalTextView.setText(attendanceRecord.getArrival());
+            departureTextView.setText(attendanceRecord.getDeparture());
+            lengthTextView.setText(attendanceRecord.getLengthOfStay());
+            statusTextView.setText(attendanceRecord.getStatus());
+        }
 
         return itemView;
     }

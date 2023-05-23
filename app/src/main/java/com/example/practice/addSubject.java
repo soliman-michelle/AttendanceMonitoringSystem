@@ -208,6 +208,7 @@ public class addSubject extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 // Get the values from the input fields
+                DatabaseReference enroll = FirebaseDatabase.getInstance().getReference("enrollSub");
 
                 String courseName = coursename.getText().toString();
                 String units = unit.getText().toString();
