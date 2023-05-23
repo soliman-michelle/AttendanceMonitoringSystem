@@ -138,7 +138,7 @@ public class qrscanner extends Drawable implements ZXingScannerView.ResultHandle
                                 Toast.makeText(qrscanner.this, "Saved Attendance", Toast.LENGTH_SHORT).show();
                                 studentTrack track = new studentTrack(name, studNum, attendanceStatus, time);
 
-                                studentData studentDatas = new studentData(studNum, attendanceStatus,name, date);
+                                studentData studentDatas = new studentData(studNum, attendanceStatus,name, date, time);
                                 // Store attendance in the classStudents node
                                 profTrackerRef
                                         .child(id)

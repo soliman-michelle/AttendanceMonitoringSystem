@@ -229,8 +229,8 @@ public class qr_generator extends AppCompatActivity {
                     .addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(@NonNull DataSnapshot snapshot) {
-                            final boolean[] sectionExists = {false};
-                            final boolean[] studentExists = {false};
+                            boolean sectionExists = false;
+                            boolean studentExists = false;
 
                             for (DataSnapshot childSnapshot : snapshot.getChildren()) {
                                 String studentId = childSnapshot.getKey();
@@ -251,19 +251,17 @@ public class qr_generator extends AppCompatActivity {
                                         .child(studentName);
 
                                 String length = ""; // Empty string by default
-                                String arrival= "";
-                                String departure= "";
-                                String status= "";
-                                String date = "";
+                                String arrival = "";
+                                String departure = "";
+                                String status = "";
 
                                 AttendanceRecord attendance = new AttendanceRecord(arrival, length, departure, status, studentName);
                                 // Update the student data in profTracker
-                                prof.child(formattedDate).setValue(attendance);
-                                prof.child(studentId).child("studentName").setValue("");
-                                prof.child(studentId).child("arrival").setValue("");
-                                prof.child(studentId).child("length_stay").setValue("");
-                                prof.child(studentId).child("departure").setValue("");
-                                prof .child(studentId).child("status").setValue("");
+                                prof.setValue(attendance);
+                                prof.child("arrival").setValue("");
+                                prof.child("length_stay").setValue("");
+                                prof.child("departure").setValue("");
+                                prof.child("status").setValue("");
                                 classSectionRef.addListenerForSingleValueEvent(new ValueEventListener() {
                                     @Override
                                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -284,7 +282,6 @@ public class qr_generator extends AppCompatActivity {
                                                 classSectionRef.child(studentId).setValue(studentName);
                                             }
                                         }
-
                                     }
 
                                     @Override
@@ -293,10 +290,10 @@ public class qr_generator extends AppCompatActivity {
                                     }
                                 });
 
-                                studentExists[0] = true;
+                                studentExists = true;
                             }
 
-                            if (!sectionExists[0]) {
+                            if (!sectionExists) {
                                 DatabaseReference sectionRef = classStudentsRef.child(classid)
                                         .child(locationString)
                                         .child("section");
@@ -304,7 +301,7 @@ public class qr_generator extends AppCompatActivity {
                                 sectionRef.setValue(sections);
                             }
 
-                            if (!studentExists[0]) {
+                            if (!studentExists) {
                                 // If no students exist in the section, remove the section from the classStudents node
                                 classStudentsRef.child(classid)
                                         .child(locationString)
@@ -323,7 +320,7 @@ public class qr_generator extends AppCompatActivity {
     }
 
 
-                                        private String getCurrentDate() {
+        private String getCurrentDate() {
         Date date = Calendar.getInstance().getTime();
         SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d yyyy", Locale.getDefault());
         return dateFormat.format(date);

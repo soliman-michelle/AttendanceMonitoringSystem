@@ -4,26 +4,23 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-
+import com.example.practice.studentData;
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.TableLayout;
-import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.GenericTypeIndicator;
 import com.google.firebase.database.ValueEventListener;
 
 import org.apache.poi.ss.usermodel.Cell;
@@ -31,13 +28,10 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 public class showAllStudentAttendance extends AppCompatActivity {
@@ -45,7 +39,7 @@ public class showAllStudentAttendance extends AppCompatActivity {
     private DatabaseReference attendanceRef;
     private TextView subjectTextView;
     private TextView dateTextView;
-    private List<AttendanceRecord> attendanceList;
+    private List<studentData> attendanceList;
     private AttendanceAdapter adapter;
     private static final int REQUEST_CODE = 1;
 
@@ -57,7 +51,7 @@ public class showAllStudentAttendance extends AppCompatActivity {
         listView = findViewById(R.id.listView);
         subjectTextView = findViewById(R.id.subject);
         dateTextView = findViewById(R.id.date);
-        attendanceList = new ArrayList<AttendanceRecord>();
+        attendanceList = new ArrayList<studentData>();
 
         // Retrieve the selected values from the intent
         Intent intent = getIntent();
@@ -71,7 +65,8 @@ public class showAllStudentAttendance extends AppCompatActivity {
         // Set the subject and term in TextViews
         subjectTextView.setText(selectedSubject);
         dateTextView.setText(selectedDate);
-
+        adapter = new AttendanceAdapter(this, attendanceList);
+        listView.setAdapter(adapter);
         // Fetch the student attendance data from the database
         attendanceRef = FirebaseDatabase.getInstance().getReference().child("profTracker");
 
@@ -118,28 +113,17 @@ public class showAllStudentAttendance extends AppCompatActivity {
                                         for (DataSnapshot studentIdSnapshot : dateSnapshot.getChildren()) {
                                             for (DataSnapshot studentSnapshot : studentIdSnapshot.getChildren()) {
                                                 // Get the attendance record for the student
-                                                AttendanceRecord attendance = studentSnapshot.getValue(AttendanceRecord.class);
+                                                String arrival = studentSnapshot.child("arrival").getValue(String.class);
+                                                String date = studentSnapshot.child("date").getValue(String.class);
+                                                String name = studentSnapshot.child("name").getValue(String.class);
+                                                String status = studentSnapshot.child("status").getValue(String.class);
+                                                String studNum = studentSnapshot.child("studNum").getValue(String.class);
 
-                                                if (attendance != null) {
-                                                    // Extract the student's name, length, arrival, departure, and status from the attendance record
-                                                    String studentName = attendance.getStudentName();
-                                                    String lengthOfStay = attendance.getLength();
-                                                    String arrivalTime = attendance.getArrival();
-                                                    String departureTime = attendance.getDeparture();
-                                                    String status = attendance.getStatus();
+                                                // Create a studentData object
+                                                studentData student = new studentData(studNum, status, name, date, arrival);
 
-                                                    // Create an AttendanceRecord object
-                                                    AttendanceRecord attendanceRecord = new AttendanceRecord();
-                                                    attendanceRecord.setStudentName(studentName);
-                                                    attendanceRecord.setLength(lengthOfStay);
-                                                    attendanceRecord.setArrival(arrivalTime);
-                                                    attendanceRecord.setDeparture(departureTime);
-                                                    attendanceRecord.setStatus(status);
-
-                                                    attendanceList.add(attendanceRecord);
-
-
-                                                }
+                                                attendanceList.add(student);
+                                                Log.d("AttendanceDebug", "Retrieved student: " + student.getName());
                                             }
                                         }
                                     }
@@ -153,6 +137,7 @@ public class showAllStudentAttendance extends AppCompatActivity {
                     listView.setAdapter(adapter);
                 }
             }
+
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
@@ -198,8 +183,8 @@ public class showAllStudentAttendance extends AppCompatActivity {
 
         // Iterate through the items and add them to the Excel sheet
         for (int i = 0; i < itemCount; i++) {
-            AttendanceRecord attendanceRecord = attendanceList.get(i);
-            String studentName = attendanceRecord.getStudentName();
+            studentData attendanceRecord = attendanceList.get(i);
+            String studentName = attendanceRecord.getName();
 
             Row row = sheet.createRow(i);
             Cell cell = row.createCell(0);

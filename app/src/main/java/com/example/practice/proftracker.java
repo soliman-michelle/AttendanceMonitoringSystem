@@ -22,7 +22,10 @@
         ActivityProftrackerBinding activityProftrackerBinding;
         Button show;
         DatabaseReference databaseReference;
-
+        private String selectedSubject;
+        private String selectedClassId;
+        private String selectedDate;
+        private String selectedTerm;
         @Override
         protected void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -90,6 +93,8 @@
             DatabaseReference userUidsRef = FirebaseDatabase.getInstance().getReference().child("profTracker");
 
             // Fetch the user UIDs from the database
+// ...
+
             userUidsRef.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
@@ -160,6 +165,17 @@
                                         ArrayAdapter<String> dateAdapter = new ArrayAdapter<>(proftracker.this, android.R.layout.simple_spinner_item, dates);
                                         dateAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                                         dateSpinner.setAdapter(dateAdapter);
+
+                                        // Insert the code snippet here
+                                        // Insert the code snippet here
+                                        if (selectedSubject != null && selectedSubject.equals(subjects.get(0))
+                                                && selectedClassId != null && selectedClassId.equals(classIds.get(0))
+                                                && selectedTerm != null && selectedTerm.equals(terms.get(0))
+                                                && selectedDate != null && selectedDate.equals(dates.get(0))) {
+                                            // Retrieve attendance data for the selected values and update the ListView
+                                            retrieveAttendanceData(userUid, selectedSubject, selectedClassId, selectedTerm, selectedDate);
+                                        }
+
                                     }
                                 }
 
@@ -178,5 +194,38 @@
                 }
             });
 
+
         }
+        // ...
+
+        // Insert the code snippet here
+        private void retrieveAttendanceData(String userUid, String subject, String classId, String term, String date) {
+            DatabaseReference attendanceRef = FirebaseDatabase.getInstance().getReference().child("profTracker")
+                    .child(userUid).child(subject).child(classId).child(term).child(date);
+
+            attendanceRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.exists()) {
+                        // Process the attendance data
+                        for (DataSnapshot studentSnapshot : dataSnapshot.getChildren()) {
+                            // Retrieve the attendance information for each student
+                            String studentUid = studentSnapshot.getKey();
+                            String attendanceStatus = studentSnapshot.child("status").getValue(String.class);
+
+                            // Perform any necessary operations with the attendance data
+                            // ...
+                        }
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+                    // Handle any errors
+                }
+            });
+        }
+
+// ...
+
     }

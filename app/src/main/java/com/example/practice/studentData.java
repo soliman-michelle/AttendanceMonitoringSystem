@@ -5,6 +5,7 @@ public class studentData {
     public String status;
     public String name;
     public String date;
+    public String arrival;
 
     public String getStudNum() {
         return studNum;
@@ -40,11 +41,20 @@ public class studentData {
         this.name = name;
     }
 
-    public studentData(String studNum, String status, String name, String date){
+    public String getArrival() {
+        return arrival;
+    }
+
+    public void setArrival(String arrival) {
+        this.arrival = arrival;
+    }
+
+    public studentData(String studNum, String status, String name, String date, String arrival){
         this.name = name;
         this.studNum = studNum;
         this.status = status;
         this.date = date;
+        this.arrival = arrival;
 
     }
 }
